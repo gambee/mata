@@ -3,6 +3,8 @@
  * Max Gambee
  * Copyright 2018
  */
+#ifndef TABLE_H
+#	define TABLE_H
 
 #ifndef TABLE_LIBS
 #	include <stdlib.h> //needed for memory mngmt
@@ -86,10 +88,10 @@ int tab_init(struct sym_tab* to_init)
 	else return 1;
 }
 
-#ifdef DEBUG
-#	ifndef DEBUG_LIBS
+#ifdef TABLE_DEBUG
+#	ifndef TABLE_DEBUG_LIBS
 #		include <stdio.h>
-#		define DEBUG_LIBS
+#		define TABLE_DEBUG_LIBS
 #	endif
 
 /* Function: tab_printall
@@ -109,4 +111,5 @@ int tab_printall(struct sym_tab* table)
 	return i;
 }
 
+#endif
 #endif

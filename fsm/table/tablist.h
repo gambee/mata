@@ -3,6 +3,8 @@
  * Max Gambee
  * Copyright 2018
  */
+#ifndef TABLIST_H
+#	define TABLIST_H
 
 #ifndef TABLE_LIBS
 #	include <stdlib.h>
@@ -90,10 +92,10 @@ int tablist_add(struct tab_entry** head, char* symbol, int at_line)
 	return 0;
 }
 
-#ifdef DEBUG
-#	ifndef DEBUG_LIBS
+#ifdef TABLE_DEBUG
+#	ifndef TABLE_DEBUG_LIBS
 #		include <stdio.h>
-#		define DEBUG_LIBS
+#		define TABLE_DEBUG_LIBS
 #	endif
 
 /* Function: tablist_printentry
@@ -126,4 +128,5 @@ int tablist_printentry(struct tab_entry* entry)
 	 return i;
  }
 	 
+#endif
 #endif
