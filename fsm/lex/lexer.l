@@ -37,7 +37,7 @@ struct sym_tab table;
 						}
 
 [:~]					{printf("Found Operator:\t%s\n", yytext);}
-[A-Za-z]+[A-Za-z0-9]*	{tab_add(&table, yytext, line_no);}
+[_A-Za-z]+[_A-Za-z0-9]*	{tab_add(&table, yytext, line_no);}
 
 "[".*[^\\]"]"			{printf("Found Range:\t%s\n", yytext);}
 

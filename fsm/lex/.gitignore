@@ -1,3 +1,4 @@
 lexer
+lex.yy.c
 table.h
 tablist.h
