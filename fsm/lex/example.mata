@@ -18,25 +18,24 @@
  * final, fail, and error states?
  */
 
-machine MyMachine
-{
-	state q0:
-		a0	->	q1
-		a1	->	q2
-		a2	->	q3
-		a^	->	e0
-	state q1:
-		a0	->	q1
-		a1	->	q2
-		a2	->	q3
-		a^	->	e0
-	state q2:
-		a1	->	q2
-		a2	->	q3
-		a^	->	e0
-	state q3:
-		a2	->	q3
-		a^	->	f0
-}
-	
+Machine exampleMachine
+start:	q0
 
+q0:
+ 	[a]		q1
+	~		q2
+q1:
+	[b]		q3
+	~		q2
+q2:
+	~		q2
+q3:
+	[c]		q4
+	~		q2
+q4:
+	~		q2
+
+//testing testing
+
+
+// Here are some example ranges
