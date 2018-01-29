@@ -13,6 +13,9 @@
 //#include "table.h"
 #include "parser.tab.h"
 
+
+extern struct Range* mk_Range(char* range, int line);
+extern struct State* mk_State(char* state, int line);
 extern int line_no;
 extern struct sym_tab table;
 
@@ -38,13 +41,18 @@ extern struct sym_tab table;
 						++line_no;
 						}
 
-[:~]					{printf("Found Operator:\t%s\n", yytext);}
-[_A-Za-z]+[_A-Za-z0-9]*	{printf("Found Identifier:\t%s\n", yytext);}
+":"					{return DECL_OP;}
+"~"					{return DEFLT_RNG;}
 
-"[".*[^\\]"]"			{printf("Found Range:\t%s\n", yytext);}
+[_A-Za-z]+[_A-Za-z0-9]*	{//printf("Found Identifier:\t%s\n", yytext);
+						yylval.state = mk_State(yytext, line_no);
+						return STATE;}
 
-[ \t]					;//ignore white space
+"[".*[^\\]"]"			{//printf("Found Range:\t%s\n", yytext);
+						yylval.range = mk_Range(yytext, line_no);
+						return RANGE;}
+
+[ \t]					{ }//ignore white space
 [\n]					{++line_no;}//so that line_no works?
 
 %%
-

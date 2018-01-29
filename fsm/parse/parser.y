@@ -11,22 +11,59 @@
 
 #define TABLE_DEBUG
 #include "table.h"
+#include "matatypes.h"
+#include "ast.h"
 
 int line_no;
 struct sym_tab table;
+struct ast syntax_tree;
 
 extern int yylex(void);
-void yyerror(char* input){ }
+void yyerror(char* input){printf("%s\n",input); }
+%}
 
-struct Range{
-	char* range;
-	int line;
-};
+%union{
+	struct Range* range;
+	struct State* state;
+	struct ast_node* astnode;
+	struct root_node* rootnode;
+}
 
-struct State{
-	struct tab_entry* entry;
-	int line;
-};
+%token <range> RANGE
+%token <state> STATE
+%token <astnode> DEFLT_RNG
+%token DECL_OP
+%type <astnode> Map Maps Declaration Deflt_Map 
+
+%%
+
+Machine:
+	Declarations
+Declarations:
+	Declaration Declarations {ast_add(&syntax_tree, $1);}
+	| Declaration		{ast_add(&syntax_tree, $1);}
+Declaration:
+	STATE DECL_OP Maps 	{
+						$$ = mk_node(mk_node(NULL, NULL, STATE, $1),
+								$3, DECL_OP, NULL);
+						printf("Found Declaration: %s:\n",
+							$1->entry->symbol);
+						tab_add(&table, $1->entry->symbol, STATE, 1);
+						}
+Maps:
+	Map Maps 			{$$ = $1;
+						$$->right = $2; }
+	| Deflt_Map			{ $$ = $1; }
+Map:
+	RANGE STATE			{$$ = mk_node(mk_node(NULL, NULL, STATE, $2),
+								NULL, RANGE, $1);
+						}
+Deflt_Map:
+	DEFLT_RNG STATE		{$$ = mk_node(mk_node(NULL, NULL, STATE, $2),
+								NULL, DEFLT_RNG, NULL);
+						}
+
+%%
 
 struct Range* mk_Range(char* range, int line)
 {
@@ -53,43 +90,23 @@ struct State* mk_State(char* state, int line)
 		return NULL; //passed uninitialized string
 	if(tmp == NULL)
 		return NULL; //failed malloc!
-	//tab_add(
-	return NULL;
+	tab_add(&table, state, STATE, 0);
+	tmp->entry = tab_lookup(&table, state);
+	tmp->line = line;
+	return tmp;
 
 }
 	
-%}
-
-%union{
-	struct Range* range;
-	struct State* state;
-}
-
-%token <range> RANGE
-%token <state> STATE
-
-%%
-
-Machine:
-	Declarations
-Declarations:
-	Declaration Declarations | Declaration
-Declaration:
-	STATE ':' Maps
-Maps:
-	Map Maps | Map
-Map:
-	RANGE STATE
-
-%%
-
 int main(int argc, char** argv)
 {
-	printf("Initializing Symbol Table.....%s\n",
-		tab_init(&table) ? (exit(1),1) ? "FAILED!\n":"\n":"SUCCESS\n");
+	tab_init(&table);
+	ast_init(&syntax_tree);
 	line_no = 1;
-	yylex();
+	printf("yyparse(): %d\n", yyparse());
+	printf("\n\nSymbol Table Contents:\n\n");
 	tab_printall(&table);
+	printf("Depth First Traversal of AST:\n\n");
+	ast_df_print(&syntax_tree);
 	return 0;
 }
 
