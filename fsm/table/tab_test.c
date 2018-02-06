@@ -10,11 +10,11 @@ int main(int argc, char** argv)
 
 	tab_init(&table);
 
-	tab_add(&table, "token1", 1, 1);
+	tab_add(&table, "a", 1, 1);
 		
-	tab_add(&table, "token1", 1, 1);
+	tab_add(&table, "a", 1, 1);
 
-	tab_add(&table, "token1", 1, 1);
+	tab_add(&table, "a", 1, 1);
 
 	tab_printall(&table);
 

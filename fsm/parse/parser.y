@@ -46,8 +46,6 @@ Declaration:
 	STATE DECL_OP Maps 	{
 						$$ = mk_node(mk_node(NULL, NULL, STATE, $1),
 								$3, DECL_OP, NULL);
-						printf("Found Declaration: %s:\n",
-							$1->entry->symbol);
 						tab_add(&table, $1->entry->symbol, STATE, 1);
 						}
 Maps:

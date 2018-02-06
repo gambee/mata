@@ -44,7 +44,8 @@ extern struct sym_tab table;
 ":"					{return DECL_OP;}
 "~"					{return DEFLT_RNG;}
 
-[_A-Za-z]+[_A-Za-z0-9]*	{//printf("Found Identifier:\t%s\n", yytext);
+
+[_A-Za-z]+[_A-Za-z0-9]*	{printf("Found Identifier:\t%s\nStrlen:\t%d\n", yytext, strlen(yytext));
 						yylval.state = mk_State(yytext, line_no);
 						return STATE;}
 
