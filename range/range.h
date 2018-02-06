@@ -7,10 +7,7 @@
 #ifndef RANGE_H
 #	define RANGE_H
 #	include <string.h>
-#	include <ctype.h>
-#	include <stdlib.h>
-#	include <stdio.h>
-#	include "buffer.h"
+#	include "rngbuf.h"
 #	include "cbits.h"
 
 typedef struct {char member[32];} rng_ind;

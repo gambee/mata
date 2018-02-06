@@ -1,9 +1,11 @@
-/* buffer.h   
+/* rngbuf.h   
  * 			    
  * Max Gambee
  * Copyright 2017
  *
  * Description: Buffer data structure for i/o in C.
+ *		<A SPIN OFF FROM THE ORIGINAL 'buffer.h'
+ *		THAT CAN BE FOUND AT "github/gambee/my_c_headers">
  */
 
 
