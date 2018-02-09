@@ -16,6 +16,7 @@ void rnginit(rng_ind*);
 int rngbitcnt(rng_ind*);
 int rngbit(rng_ind*, int);
 int rngset(rng_ind*, int);
+int rngunset(rng_ind*, int);
 int rngflip(rng_ind*, int);
 
 int rngstr(char*,rng_ind*,int);
@@ -254,6 +255,14 @@ int rngbit(rng_ind* rng, int i)
 	if(!rng)
 		return -1;
 	return charbit(rng->member[i/8], i%8);
+}
+
+int rngunset(rng_ind* rng, int i)
+{
+	if(rng&&(i<256))
+		return charunset(rng->member + i/8, i%8);
+	else
+		return -1;
 }
 
 int rngset(rng_ind* rng, int i)

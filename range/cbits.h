@@ -12,7 +12,7 @@ int cbit(int);
 int cbitcnt(unsigned char);
 
 int charbit(unsigned char, int);
-int charset(unsigned char*, int);
+int charunset(unsigned char*, int);
 int charflip(unsigned char*, int);
 
 int cbit(int i)
@@ -45,6 +45,14 @@ int charset(unsigned char* c, int i)
 {
 	if(c && (i<8))
 		return (*c = *c | cbit(i));
+	else 
+		return -1;
+}
+
+int charunset(unsigned char* c, int i)
+{
+	if(c && (i<8))
+		return (*c = *c & ~cbit(i));
 	else 
 		return -1;
 }
