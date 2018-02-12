@@ -67,15 +67,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "lex.h"
 #include "../range.h"
+#define PRINT(STR, ARG) printf("BISON: " #STR " %d\n", ARG )
 
+extern void yysetbuf(char**);
 extern int yylex(void);
 void yyerror(char* input){printf("%s\n", input);}
 rng_ind range;
 int compliment;
 
-#line 79 "rngcomp.tab.c" /* yacc.c:339  */
+#line 80 "rngcomp.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -123,11 +124,11 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 20 "rngcomp.y" /* yacc.c:355  */
+#line 21 "rngcomp.y" /* yacc.c:355  */
 
 	int singleton;
 
-#line 131 "rngcomp.tab.c" /* yacc.c:355  */
+#line 132 "rngcomp.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -144,7 +145,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 148 "rngcomp.tab.c" /* yacc.c:358  */
+#line 149 "rngcomp.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -442,8 +443,8 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    30,    30,    32,    33,    35,    35,    37,    38,    40,
-      47
+       0,    31,    31,    33,    34,    36,    36,    38,    39,    41,
+      48
 };
 #endif
 
@@ -1217,46 +1218,46 @@ yyreduce:
   switch (yyn)
     {
         case 3:
-#line 32 "rngcomp.y" /* yacc.c:1646  */
+#line 33 "rngcomp.y" /* yacc.c:1646  */
     {compliment = 0;}
-#line 1223 "rngcomp.tab.c" /* yacc.c:1646  */
+#line 1224 "rngcomp.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 33 "rngcomp.y" /* yacc.c:1646  */
+#line 34 "rngcomp.y" /* yacc.c:1646  */
     {compliment = 1;}
-#line 1229 "rngcomp.tab.c" /* yacc.c:1646  */
+#line 1230 "rngcomp.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 37 "rngcomp.y" /* yacc.c:1646  */
-    {rngset(&range, yylval.singleton);}
-#line 1235 "rngcomp.tab.c" /* yacc.c:1646  */
+#line 38 "rngcomp.y" /* yacc.c:1646  */
+    {rngset(&range, (yyvsp[0].singleton));}
+#line 1236 "rngcomp.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 41 "rngcomp.y" /* yacc.c:1646  */
+#line 42 "rngcomp.y" /* yacc.c:1646  */
     {
 		int i;
 		for(i=(yyvsp[-2].singleton);i<=(yyvsp[0].singleton);i++)
 			rngset(&range, i);
 	}
-#line 1245 "rngcomp.tab.c" /* yacc.c:1646  */
+#line 1246 "rngcomp.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 48 "rngcomp.y" /* yacc.c:1646  */
+#line 49 "rngcomp.y" /* yacc.c:1646  */
     {
 		int i;
 		if(compliment)
 			for(i=0;i<32;i++)
 				range.member[i] = ~range.member[i];
 	}
-#line 1256 "rngcomp.tab.c" /* yacc.c:1646  */
+#line 1257 "rngcomp.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1260 "rngcomp.tab.c" /* yacc.c:1646  */
+#line 1261 "rngcomp.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1484,13 +1485,27 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 54 "rngcomp.y" /* yacc.c:1906  */
+#line 55 "rngcomp.y" /* yacc.c:1906  */
 
 
-int main(int argc, char** argv)
+
+int main(void)
 {
-	rnginit(&range);
-	yyparse();
-	printf("rangstr:\t%s\n", rngexpr(&range));
+	char input[501];
+	char *substr = input;
+	int singleton, state, token;
+
+
+	do{
+		rnginit(&range);
+		printf("Enter Character Class: ");
+		scanf(" %s", input);
+		substr = input;
+		yysetbuf(&substr);
+		rnginit(&range);
+		yyparse();
+		rngprintbits(&range);
+	}while(strcmp(input, "quit"));
+
 	return 0;
 }

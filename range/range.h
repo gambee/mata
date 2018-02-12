@@ -21,7 +21,7 @@ int rngflip(rng_ind*, int);
 
 int rngstr(char*,rng_ind*,int);
 void rngprintbits(rng_ind*);
-int bufputch(struct BUF_buffer*, unsigned int);
+int bufputch(struct RNGBUF_buffer*, unsigned int);
 
 char* rngexpr(rng_ind*);
 int compexpr(rng_ind*, char*);
@@ -141,7 +141,7 @@ int compexpr(rng_ind* rng, char* expr)
 }
 
 
-int bufputch(struct BUF_buffer *buf, unsigned int c)
+int bufputch(struct RNGBUF_buffer *buf, unsigned int c)
 {
 	char fmt[100];
 	if(!buf)
@@ -150,47 +150,47 @@ int bufputch(struct BUF_buffer *buf, unsigned int c)
 	switch(c)
 	{
 		case '\n':
-			BUF_puts(buf, "\\n");
+			RNGBUF_puts(buf, "\\n");
 			return 0;
 		case '\t':
-			BUF_puts(buf, "\\t");
+			RNGBUF_puts(buf, "\\t");
 			return 0;
 		case '\f':
-			BUF_puts(buf, "\\f");
+			RNGBUF_puts(buf, "\\f");
 			return 0;
 		case '\v':
-			BUF_puts(buf, "\\v");
+			RNGBUF_puts(buf, "\\v");
 			return 0;
 		case '\r':
-			BUF_puts(buf, "\\r");
+			RNGBUF_puts(buf, "\\r");
 			return 0;
 		case ' ':
-			BUF_puts(buf, "\\s");
+			RNGBUF_puts(buf, "\\s");
 			return 0;
 		case '\\':
-			BUF_puts(buf, "\\\\");
+			RNGBUF_puts(buf, "\\\\");
 			return 0;
 		case '-':
-			BUF_puts(buf, "\\-");
+			RNGBUF_puts(buf, "\\-");
 			return 0;
 		case '<':
-			BUF_puts(buf, "\\<");
+			RNGBUF_puts(buf, "\\<");
 			return 0;
 		case '{':
-			BUF_puts(buf, "\\{");
+			RNGBUF_puts(buf, "\\{");
 			return 0;
 		case ']':
-			BUF_puts(buf, "\\]");
+			RNGBUF_puts(buf, "\\]");
 			return 0;
 	}
 
 	if(isgraph(c))
-		BUF_putc(buf, c);
+		RNGBUF_putc(buf, c);
 	else
 	{
 		sprintf(fmt, "<%u>", c);
 		printf("%s\n", fmt);
-		BUF_puts(buf, fmt);
+		RNGBUF_puts(buf, fmt);
 	}
 
 	return 0;
@@ -198,16 +198,16 @@ int bufputch(struct BUF_buffer *buf, unsigned int c)
 
 char* rngexpr(rng_ind* rng)
 {
-	struct BUF_buffer buffer;
+	struct RNGBUF_buffer buffer;
 	int i, flag, blen;
 	char *ret, *cur;
 
 	if(!rng)
 		return NULL;
 
-	BUF_init(&buffer);
+	RNGBUF_init(&buffer);
 
-	BUF_putc(&buffer, '[');
+	RNGBUF_putc(&buffer, '[');
 
 	for(i=1,flag=0;i<256;i++)
 	{
@@ -226,7 +226,7 @@ char* rngexpr(rng_ind* rng)
 				bufputch(&buffer, i);
 				if(rngbit(rng,i+1))
 				{
-					BUF_putc(&buffer, '-');
+					RNGBUF_putc(&buffer, '-');
 					flag = 1;
 				}
 			}
@@ -234,16 +234,16 @@ char* rngexpr(rng_ind* rng)
 	}
 	if(flag)
 		bufputch(&buffer, i-1);
-	BUF_putc(&buffer, ']');
+	RNGBUF_putc(&buffer, ']');
 
 	
-	blen = BUF_line_len(&buffer);
+	blen = RNGBUF_line_len(&buffer);
 	blen = (blen < 0) ? -blen : blen; 
 	ret = (char*) malloc(blen+1);
 
 	if(ret)
-		for(cur = ret; *cur = BUF_getc(&buffer); ++cur);
-	else while(BUF_getc(&buffer));
+		for(cur = ret; *cur = RNGBUF_getc(&buffer); ++cur);
+	else while(RNGBUF_getc(&buffer));
 
 	return ret;
 }

@@ -58,7 +58,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 20 "rngcomp.y" /* yacc.c:1909  */
+#line 21 "rngcomp.y" /* yacc.c:1909  */
 
 	int singleton;
 
