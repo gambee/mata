@@ -8,15 +8,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../charclass.h"
+#include "charclass.h"
 #define PRINT(STR, ARG) printf("BISON: " #STR " %d\n", ARG )
 
-extern void yysetbuf(char**);
-extern int yylex(void);
-void yyerror(char* input){printf("%s\n", input);}
+extern void cc_setbuf(char**);
+extern int cc_lex(void);
+void cc_error(char* input){printf("%s\n", input);}
 charclass cclass;
 int compliment;
 %}
+
+%define api.prefix {cc_}
 
 %union{
 	int singleton;
@@ -67,9 +69,9 @@ int main(void)
 		printf("Enter Character Class: ");
 		scanf(" %s", input);
 		substr = input;
-		yysetbuf(&substr);
+		cc_setbuf(&substr);
 		cc_init(&cclass);
-		yyparse();
+		cc_parse();
 		cc_printbits(&cclass);
 	}while(strcmp(input, "quit"));
 

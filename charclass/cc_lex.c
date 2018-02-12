@@ -18,18 +18,18 @@
 enum state{INITIAL, INITIAL_B, CHARCLASS, INTEGER, CTLCHAR, INTCLASS, END};
 
 int fsm(char**, int*, int*);
-int yylex(void);
+int cc_lex(void);
 
-int yystate;
-char **yybuf;
+int cc_state;
+char **cc_buf;
 
-void yysetbuf(char**substr)
+void cc_setbuf(char**substr)
 {
-	yystate = INITIAL;
-	yybuf = substr;
+	cc_state = INITIAL;
+	cc_buf = substr;
 }
 
-int yylex(void){ return fsm(yybuf, &yystate, &yylval.singleton); }
+int cc_lex(void){ return fsm(cc_buf, &cc_state, &cc_lval.singleton); }
 
 int fsm(char** substr, int* STATE, int* SING)
 {
