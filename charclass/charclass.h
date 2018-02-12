@@ -1,43 +1,43 @@
-/* range.h
+/* charclass.h
  *
  * Max Gambee
  * Copyright 2018
  */
 
-#ifndef RANGE_H
-#	define RANGE_H
+#ifndef CHARCLASS_H
+#	define CHARCLASS_H
 #	include <string.h>
-#	include "rngbuf.h"
+#	include "buffer.h"
 #	include "cbits.h"
 
-typedef struct {char member[32];} rng_ind;
+typedef struct {char member[32];} charclass;
 
-void rnginit(rng_ind*);
-int rngbitcnt(rng_ind*);
-int rngbit(rng_ind*, int);
-int rngset(rng_ind*, int);
-int rngunset(rng_ind*, int);
-int rngflip(rng_ind*, int);
+void cc_init(charclass*);
+int cc_bitcnt(charclass*);
+int cc_bit(charclass*, int);
+int cc_set(charclass*, int);
+int cc_unset(charclass*, int);
+int cc_flip(charclass*, int);
 
-int rngstr(char*,rng_ind*,int);
-void rngprintbits(rng_ind*);
-int bufputch(struct RNGBUF_buffer*, unsigned int);
+int cc_str(char*,charclass*,int);
+void cc_printbits(charclass*);
+int bufputch(struct BUF_buffer*, unsigned int);
 
-char* rngexpr(rng_ind*);
-int compexpr(rng_ind*, char*);
+char* cc_expr(charclass*);
+int compexpr(charclass*, char*);
 
 
-int compexpr(rng_ind* rng, char* expr)
+int compexpr(charclass* cclass, char* expr)
 {
 	unsigned char tmp[100];
 	unsigned char last = 0;
 	unsigned char *cur;
 	int i;
 	int compliment = 0;
-	if(!rng || !expr)
+	if(!cclass || !expr)
 		return -1;
 
-	rnginit(rng);
+	cc_init(cclass);
 	cur = expr;
 
 	if(*(cur++) == '[')
@@ -57,23 +57,23 @@ int compexpr(rng_ind* rng, char* expr)
 					switch(*(++cur))
 					{
 						case 'n':
-							rngset(rng, '\n');
+							cc_set(cclass, '\n');
 							last = '\n';
 							break;
 						case 'r':
-							rngset(rng, '\r');
+							cc_set(cclass, '\r');
 							last = '\r';
 							break;
 						case 't':
-							rngset(rng, '\t');
+							cc_set(cclass, '\t');
 							last = '\t';
 							break;
 						case 'f':
-							rngset(rng, '\f');
+							cc_set(cclass, '\f');
 							last = '\f';
 							break;
 						case 'v':
-							rngset(rng, '\v');
+							cc_set(cclass, '\v');
 							last = '\v';
 							break;
 						case '-':
@@ -81,11 +81,11 @@ int compexpr(rng_ind* rng, char* expr)
 						case '<':
 						case '\\':
 						case '[':
-							rngset(rng, *cur);
+							cc_set(cclass, *cur);
 							last = *cur;
 							break;
 						case 's':
-							rngset(rng, ' ');
+							cc_set(cclass, ' ');
 							last = ' ';
 							break;
 						default:
@@ -105,7 +105,7 @@ int compexpr(rng_ind* rng, char* expr)
 					}
 					i = atoi(tmp);
 					if((i < 256)&&(i >= 0))
-						rngset(rng, i);
+						cc_set(cclass, i);
 					else
 					{
 						fprintf(stderr, "ERROR: ASCII Integer out of range: %u\n", i);
@@ -123,7 +123,7 @@ int compexpr(rng_ind* rng, char* expr)
 					last = ']';
 					break;
 				default:
-					rngset(rng, *cur);
+					cc_set(cclass, *cur);
 					break;
 				}
 				++cur;
@@ -131,7 +131,7 @@ int compexpr(rng_ind* rng, char* expr)
 
 		if(compliment)
 			for(i=0;i<32;i++)
-				rng->member[i] = ~(rng->member[i]);
+				cclass->member[i] = ~(cclass->member[i]);
 		
 
 		
@@ -141,7 +141,7 @@ int compexpr(rng_ind* rng, char* expr)
 }
 
 
-int bufputch(struct RNGBUF_buffer *buf, unsigned int c)
+int bufputch(struct BUF_buffer *buf, unsigned int c)
 {
 	char fmt[100];
 	if(!buf)
@@ -150,70 +150,70 @@ int bufputch(struct RNGBUF_buffer *buf, unsigned int c)
 	switch(c)
 	{
 		case '\n':
-			RNGBUF_puts(buf, "\\n");
+			BUF_puts(buf, "\\n");
 			return 0;
 		case '\t':
-			RNGBUF_puts(buf, "\\t");
+			BUF_puts(buf, "\\t");
 			return 0;
 		case '\f':
-			RNGBUF_puts(buf, "\\f");
+			BUF_puts(buf, "\\f");
 			return 0;
 		case '\v':
-			RNGBUF_puts(buf, "\\v");
+			BUF_puts(buf, "\\v");
 			return 0;
 		case '\r':
-			RNGBUF_puts(buf, "\\r");
+			BUF_puts(buf, "\\r");
 			return 0;
 		case ' ':
-			RNGBUF_puts(buf, "\\s");
+			BUF_puts(buf, "\\s");
 			return 0;
 		case '\\':
-			RNGBUF_puts(buf, "\\\\");
+			BUF_puts(buf, "\\\\");
 			return 0;
 		case '-':
-			RNGBUF_puts(buf, "\\-");
+			BUF_puts(buf, "\\-");
 			return 0;
 		case '<':
-			RNGBUF_puts(buf, "\\<");
+			BUF_puts(buf, "\\<");
 			return 0;
 		case '{':
-			RNGBUF_puts(buf, "\\{");
+			BUF_puts(buf, "\\{");
 			return 0;
 		case ']':
-			RNGBUF_puts(buf, "\\]");
+			BUF_puts(buf, "\\]");
 			return 0;
 	}
 
 	if(isgraph(c))
-		RNGBUF_putc(buf, c);
+		BUF_putc(buf, c);
 	else
 	{
 		sprintf(fmt, "<%u>", c);
 		printf("%s\n", fmt);
-		RNGBUF_puts(buf, fmt);
+		BUF_puts(buf, fmt);
 	}
 
 	return 0;
 }
 
-char* rngexpr(rng_ind* rng)
+char* cc_expr(charclass* cclass)
 {
-	struct RNGBUF_buffer buffer;
+	struct BUF_buffer buffer;
 	int i, flag, blen;
 	char *ret, *cur;
 
-	if(!rng)
+	if(!cclass)
 		return NULL;
 
-	RNGBUF_init(&buffer);
+	BUF_init(&buffer);
 
-	RNGBUF_putc(&buffer, '[');
+	BUF_putc(&buffer, '[');
 
 	for(i=1,flag=0;i<256;i++)
 	{
 		if(flag)
 		{
-			if(!rngbit(rng,i))
+			if(!cc_bit(cclass,i))
 			{
 				bufputch(&buffer, i-1);
 				flag = 0;
@@ -221,12 +221,12 @@ char* rngexpr(rng_ind* rng)
 		}
 		else
 		{
-			if(rngbit(rng,i))
+			if(cc_bit(cclass,i))
 			{
 				bufputch(&buffer, i);
-				if(rngbit(rng,i+1))
+				if(cc_bit(cclass,i+1))
 				{
-					RNGBUF_putc(&buffer, '-');
+					BUF_putc(&buffer, '-');
 					flag = 1;
 				}
 			}
@@ -234,74 +234,74 @@ char* rngexpr(rng_ind* rng)
 	}
 	if(flag)
 		bufputch(&buffer, i-1);
-	RNGBUF_putc(&buffer, ']');
+	BUF_putc(&buffer, ']');
 
 	
-	blen = RNGBUF_line_len(&buffer);
+	blen = BUF_len(&buffer);
 	blen = (blen < 0) ? -blen : blen; 
 	ret = (char*) malloc(blen+1);
 
 	if(ret)
-		for(cur = ret; *cur = RNGBUF_getc(&buffer); ++cur);
-	else while(RNGBUF_getc(&buffer));
+		for(cur = ret; *cur = BUF_getc(&buffer); ++cur);
+	else while(BUF_getc(&buffer));
 
 	return ret;
 }
 
-void rnginit(rng_ind* rng){memset(rng->member,0,32);}
+void cc_init(charclass* cclass){memset(cclass->member,0,32);}
 	 
-int rngbit(rng_ind* rng, int i)
+int cc_bit(charclass* cclass, int i)
 {
-	if(!rng)
+	if(!cclass)
 		return -1;
-	return charbit(rng->member[i/8], i%8);
+	return charbit(cclass->member[i/8], i%8);
 }
 
-int rngunset(rng_ind* rng, int i)
+int cc_unset(charclass* cclass, int i)
 {
-	if(rng&&(i<256))
-		return charunset(rng->member + i/8, i%8);
+	if(cclass&&(i<256))
+		return charunset(cclass->member + i/8, i%8);
 	else
 		return -1;
 }
 
-int rngset(rng_ind* rng, int i)
+int cc_set(charclass* cclass, int i)
 {
-	if(rng&&(i<256))
-		return charset(rng->member + i/8, i%8);
+	if(cclass&&(i<256))
+		return charset(cclass->member + i/8, i%8);
 	else
 		return -1;
 }
 
-int rngflip(rng_ind* rng, int i)
+int cc_flip(charclass* cclass, int i)
 {
-	if(rng&&(i<256))
+	if(cclass&&(i<256))
 	{
-		return charflip(rng->member + i/8, i%8);
+		return charflip(cclass->member + i/8, i%8);
 	}
 	else return -1;
 }
 
-int rngbitcnt(rng_ind* rng)
+int cc_bitcnt(charclass* cclass)
 {
 	int i, cnt;
 	
-	if(!rng)
+	if(!cclass)
 		return -1;
 	
 	for(i=0,cnt=0;i<32;i++)
-		cnt += (rng->member[i] ? cbitcnt(rng->member[i]) : 0);
+		cnt += (cclass->member[i] ? cbitcnt(cclass->member[i]) : 0);
 	
 	return cnt;
 }
 
-int rngstr(char* dest, rng_ind* rng, int size)
+int cc_str(char* dest, charclass* cclass, int size)
 {
 	int i, j, index;
 
-	if(!rng || !dest)
+	if(!cclass || !dest)
 		return -1;
-	if(size < rngbitcnt(rng) + 1)
+	if(size < cc_bitcnt(cclass) + 1)
 	{
 		*dest = 0;
 		return -2;
@@ -309,9 +309,9 @@ int rngstr(char* dest, rng_ind* rng, int size)
 	memset(dest, 0, size); 
 	
 	for(i=0,index=0;i<32;i++)
-		if(rng->member[i])
+		if(cclass->member[i])
 			for(j=0;j<8;j++)
-				if(charbit(rng->member[i], j)>0)
+				if(charbit(cclass->member[i], j)>0)
 				{
 					dest[index] = i*8 + j;
 					++index;
@@ -321,14 +321,14 @@ int rngstr(char* dest, rng_ind* rng, int size)
 }
 
 
-void rngprintbits(rng_ind* rng)
+void cc_printbits(charclass* cclass)
 {
 	int i,j;
-	if(rng)
+	if(cclass)
 		for(i=0;i<32;i+=8)
 		{
 			for(j=0;j<8;j++)
-				printf("%08d ", showbits(rng->member[j+i]));
+				printf("%08d ", showbits(cclass->member[j+i]));
 			printf("\n");
 		}
 		printf("\n");

@@ -10,7 +10,7 @@
  * unintuitive to code/maintain this as a flex scanner.
  */
 #include <ctype.h>
-#include "rngcomp.tab.h"
+#include "cc_comp.tab.h"
 #include "buffer.h"
 
 enum state{INITIAL, INITIAL_B, CHARCLASS, INTEGER, CTLCHAR, INTCLASS, END};

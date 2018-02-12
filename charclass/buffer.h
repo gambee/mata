@@ -1,16 +1,14 @@
-/* rngbuf.h   
+/* buffer.h   
  * 			    
  * Max Gambee
  * Copyright 2017
  *
  * Description: Buffer data structure for i/o in C.
- *		<A SPIN OFF FROM THE ORIGINAL 'buffer.h'
- *		THAT CAN BE FOUND AT "github/gambee/my_c_headers">
  */
 
 
-#ifndef RNGBUFFER_H
-#	define RNGBUFFER_H //defend against duplicate includes
+#ifndef BUFFER_H
+#	define BUFFER_H //defend against duplicate includes
 
 
 /* ===================================== *
@@ -26,13 +24,13 @@
  * Section: Defines 					 *
  * ===================================== */
 
-#ifdef RNGBUF_DEBUG
-#	ifndef RNGBUF_SIZE
-#	define RNGBUF_SIZE 8		//buffer node sizes for debugging
+#ifdef BUF_DEBUG
+#	ifndef BUF_SIZE
+#	define BUF_SIZE 8		//buffer node sizes for debugging
 #	endif					//Note: node size should be 16 in x64
 #else
-#	ifndef RNGBUF_SIZE
-#	define RNGBUF_SIZE 1016	//buffer node sizes in performance level code 
+#	ifndef BUF_SIZE
+#	define BUF_SIZE 1016	//buffer node sizes in performance level code 
 #	endif					//Note: node size should be 1024 in x64
 #endif
 
@@ -41,20 +39,20 @@
  * ===================================== */
 
 /* ------------------------------------- * 
- * Structure: RNGBUF_node
+ * Structure: BUF_node
  * ------------------------------------- */
-struct RNGBUF_node
+struct BUF_node
 {
-	struct RNGBUF_node* next; //placed in front for struct packing and alignment
-	char data[RNGBUF_SIZE];
+	struct BUF_node* next; //placed in front for struct packing and alignment
+	char data[BUF_SIZE];
 };
 
 /* ------------------------------------- * 
- * Structure: RNGBUF_buffer
+ * Structure: BUF_buffer
  * ------------------------------------- */
-struct RNGBUF_buffer
+struct BUF_buffer
 {
-	struct RNGBUF_node *front, *back;
+	struct BUF_node *front, *back;
 	unsigned int front_index, back_index;
 };
 
@@ -65,13 +63,13 @@ struct RNGBUF_buffer
 
 
 /* ------------------------------------- * 
- * Function: RNGBUF_append_node
+ * Function: BUF_append_node
  * ------------------------------------- */
-void RNGBUF_append_node(struct RNGBUF_buffer *buf)
+void BUF_append_node(struct BUF_buffer *buf)
 {
-	struct RNGBUF_node *tmp;
+	struct BUF_node *tmp;
 
-	tmp = (struct RNGBUF_node*) malloc(sizeof(struct RNGBUF_node));
+	tmp = (struct BUF_node*) malloc(sizeof(struct BUF_node));
 	tmp->next = NULL;
 	buf->back_index = 0;
 
@@ -80,9 +78,9 @@ void RNGBUF_append_node(struct RNGBUF_buffer *buf)
 }
 
 /* ------------------------------------- * 
- * Function: RNGBUF_init
+ * Function: BUF_init
  * ------------------------------------- */
-void RNGBUF_init(struct RNGBUF_buffer *to_init)
+void BUF_init(struct BUF_buffer *to_init)
 {
 	to_init->front_index = 0;
 	to_init->back_index = 0;
@@ -91,9 +89,9 @@ void RNGBUF_init(struct RNGBUF_buffer *to_init)
 }
 
 /* ------------------------------------- * 
- * Function: RNGBUF_line_len
+ * Function: BUF_line_len
  * ------------------------------------- */
-int RNGBUF_line_len(struct RNGBUF_buffer *buf)
+int BUF_line_len(struct BUF_buffer *buf)
 {
 	/* returns number of characters until, but not including, the next
 	 * end-of-line character, null-terminating character, or back of stream.
@@ -102,7 +100,7 @@ int RNGBUF_line_len(struct RNGBUF_buffer *buf)
 	 * or if buf is a NULL pointer.
 	 */
 
-	struct RNGBUF_node *cur;
+	struct BUF_node *cur;
 	int i, count = 0;
 
 	if(!buf)
@@ -113,33 +111,63 @@ int RNGBUF_line_len(struct RNGBUF_buffer *buf)
 		for(i = 0; i < buf->back_index && cur->data[i] != '\n' && cur->data[i]; i++, count++);
 	else
 	{
-		for(i = buf->front_index; i < RNGBUF_SIZE && cur->data[i] != '\n' && cur->data[i]; i++, count++);
+		for(i = buf->front_index; i < BUF_SIZE && cur->data[i] != '\n' && cur->data[i]; i++, count++);
 		for(cur=cur->next; cur != buf->back; cur=cur->next)
-			for(i = 0; i < RNGBUF_SIZE && cur->data[i] != '\n' && cur->data[i]; i++, count++);
+			for(i = 0; i < BUF_SIZE && cur->data[i] != '\n' && cur->data[i]; i++, count++);
 		for(i = 0; i < buf->back_index && cur->data[i] != '\n' && cur->data[i]; i++, count++);
 
 	}
 	return (cur->data[i] == '\n') ? count : -count;
 }
+/* ------------------------------------- * 
+ * Function: BUF_len
+ * ------------------------------------- */
+int BUF_len(struct BUF_buffer *buf)
+{
+	/*	Returns the number of characters (including carriage returns,
+	 *	newlines, etc.) until the back of stream. Essentially the length of 
+	 *	the stream. The return value is one less then the size of the char
+	 *	array required to hold the entire contents of the buffer. Return
+	 *	value should always be positive, unless the buffer is empty, in
+	 *	which case it should be zero.
+	 */
+
+	struct BUF_node *cur;
+	int i, count = 0;
+
+	if(!buf)
+		return 0; //exit immediately if invalid NULL pointer is passed
+
+	cur = buf->front;
+	if(cur == buf->back)
+		count = buf->back_index - buf->front_index;
+	else
+	{
+		count = BUF_SIZE + buf->back_index - buf->front_index;
+		for(cur=cur->next; cur != buf->back; cur=cur->next)
+			count += BUF_SIZE;
+	}
+	return count;
+}
 
 /* ------------------------------------- * 
- * Function: RNGBUF_getc
+ * Function: BUF_getc
  * ------------------------------------- */
-int RNGBUF_getc(struct RNGBUF_buffer *buf)
+int BUF_getc(struct BUF_buffer *buf)
 {
-	struct RNGBUF_node *tmp;
+	struct BUF_node *tmp;
 	int ret = 0;
 	
 	if(buf && buf->front)
 	{
 		if(buf->front == buf->back)
 		{
-			if(buf->front_index < buf->back_index && buf->front_index < RNGBUF_SIZE)
+			if(buf->front_index < buf->back_index && buf->front_index < BUF_SIZE)
 				ret = buf->front->data[buf->front_index++];
 		}
 		else
 		{
-			if(buf->front_index < RNGBUF_SIZE)
+			if(buf->front_index < BUF_SIZE)
 				ret = buf->front->data[buf->front_index++];
 			else
 			{
@@ -156,7 +184,7 @@ int RNGBUF_getc(struct RNGBUF_buffer *buf)
 }
 
 /* -------------------------------------------------------------------------- *
- * Function: RNGBUF_putc
+ * Function: BUF_putc
  *		Description: Enqueues character 'c' into the buffer pointed to by 'buf'.
  *		Arguments:
  *			buf	: Address of the buffer to enqueue to.
@@ -164,23 +192,23 @@ int RNGBUF_getc(struct RNGBUF_buffer *buf)
  *		Return Value: int- 
  *			-1		: Failure :: Because buf == NULL.
  *			(int) c	: Success :: Returns the value of the enqueued character
- *								 for convenient use of RNGBUF_putc in expressions.
+ *								 for convenient use of BUF_putc in expressions.
  * -------------------------------------------------------------------------- */
-int RNGBUF_putc(struct RNGBUF_buffer *buf, char c)
+int BUF_putc(struct BUF_buffer *buf, char c)
 {
 	/* Returns zero on success, non-zero otherwise. */
 	if(!buf)
 		return -1; // NULL ptr passed; exit in error immediately
 
-	(!buf->back || (buf->back_index >= RNGBUF_SIZE)) ? RNGBUF_append_node(buf) : 0;
+	(!buf->back || (buf->back_index >= BUF_SIZE)) ? BUF_append_node(buf) : 0;
 	buf->back->data[buf->back_index++] = c;
 	return (int) c;
 }
 
 /* ------------------------------------- * 
- * Function: RNGBUF_puts
+ * Function: BUF_puts
  * ------------------------------------- */
-int RNGBUF_puts(struct RNGBUF_buffer *buf, char *str)
+int BUF_puts(struct BUF_buffer *buf, char *str)
 {
 	int i = 0;
 	char *cur = str;
@@ -188,19 +216,18 @@ int RNGBUF_puts(struct RNGBUF_buffer *buf, char *str)
 	if(!buf || !str)
 		return -1; //NULL ptr(s) passed, exit in error immediately
 
-	for(i = 0, cur = str; (*cur) ? RNGBUF_putc(buf, *cur) : 0; i++, cur++);
+	for(i = 0, cur = str; (*cur) ? BUF_putc(buf, *cur) : 0; i++, cur++);
 
 	return i;
 }
 
-
 /* ------------------------------------- * 
- * Function: RNGBUF_print_all
+ * Function: BUF_print_all
  * ------------------------------------- */
-int RNGBUF_print_all(struct RNGBUF_buffer *buf)
+int BUF_print_all(struct BUF_buffer *buf)
 {
-	struct RNGBUF_node *cur = NULL;
-	struct RNGBUF_node *back = NULL;
+	struct BUF_node *cur = NULL;
+	struct BUF_node *back = NULL;
 	int chars = 0;
 	int nodes = 0;
 	int i;
@@ -209,23 +236,23 @@ int RNGBUF_print_all(struct RNGBUF_buffer *buf)
 	{
 		back = buf->back;
 		cur = buf->front;
-		if(cur && buf->front_index < RNGBUF_SIZE && buf->back_index <= RNGBUF_SIZE)
+		if(cur && buf->front_index < BUF_SIZE && buf->back_index <= BUF_SIZE)
 		{
 			if(cur == back)
 			{
 				printf("Node %d:\n", nodes++);
-				for(i = 0; i <= buf->front_index && i < RNGBUF_SIZE; i++)
+				for(i = 0; i <= buf->front_index && i < BUF_SIZE; i++)
 					printf("\tdata[%d] : %c : %d %s\n", i 
 						, isprint(cur->data[i]) ? cur->data[i] : '@'
 						, cur->data[i]
 						, i == buf->front_index ? "<----Front Element" : "");
 			
-				for(NULL; i <= buf->back_index && i < RNGBUF_SIZE; i++)
+				for(NULL; i <= buf->back_index && i < BUF_SIZE; i++)
 					printf("\tdata[%d] : %c : %d %s\n", i 
 						, isprint(cur->data[i]) ? cur->data[i] : '@'
 						, cur->data[i]
 						, i + 1 == buf->back_index ? "<----Back Element" : "");
-				for(NULL; i < RNGBUF_SIZE; i++)
+				for(NULL; i < BUF_SIZE; i++)
 					printf("\tdata[%d] : %c : %d\n", i
 					, isprint(cur->data[i]) ? cur->data[i] : '@'
 					, cur->data[i]);
@@ -234,7 +261,7 @@ int RNGBUF_print_all(struct RNGBUF_buffer *buf)
 			{
 				/* front node: */
 				printf("Node %d:\n", nodes++);
-				for(i = 0; i < RNGBUF_SIZE; i++)
+				for(i = 0; i < BUF_SIZE; i++)
 					printf("\tdata[%d] : %c : %d %s\n", i 
 						, isprint(cur->data[i]) ? cur->data[i] : '@'
 						, cur->data[i]
@@ -247,7 +274,7 @@ int RNGBUF_print_all(struct RNGBUF_buffer *buf)
 				/* middle nodes: */
 				while(cur && cur != buf->back)
 				{
-					for(i = 0; i < RNGBUF_SIZE; i++)
+					for(i = 0; i < BUF_SIZE; i++)
 						printf("\tdata[%d] : %c : %d\n", i
 						, isprint(cur->data[i]) ? cur->data[i] : '@'
 						, cur->data[i]);
@@ -256,7 +283,7 @@ int RNGBUF_print_all(struct RNGBUF_buffer *buf)
 				}
 
 				/* back node: */
-				for(i = 0; i < RNGBUF_SIZE; i++)
+				for(i = 0; i < BUF_SIZE; i++)
 					printf("\tdata[%d] : %c : %d %s\n", i 
 						, isprint(cur->data[i]) ? cur->data[i] : '@'
 						, cur->data[i]
@@ -276,4 +303,4 @@ int RNGBUF_print_all(struct RNGBUF_buffer *buf)
 	return 0;
 }
 
-#endif //ifndef RNGBUFFER_H
+#endif //ifndef BUFFER_H

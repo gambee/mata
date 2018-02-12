@@ -1,4 +1,4 @@
-/* rngcomp.y
+/* cc_comp.y
  *
  * Max Gambee
  * Copyright 2018
@@ -8,13 +8,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../range.h"
+#include "../charclass.h"
 #define PRINT(STR, ARG) printf("BISON: " #STR " %d\n", ARG )
 
 extern void yysetbuf(char**);
 extern int yylex(void);
 void yyerror(char* input){printf("%s\n", input);}
-rng_ind range;
+charclass cclass;
 int compliment;
 %}
 
@@ -35,14 +35,14 @@ Head:
 Tail:
 	Expression Tail | Expression End
 Expression:
-	SINGLETON {rngset(&range, $1);}
+	SINGLETON {cc_set(&cclass, $1);}
 	| Range
 Range:
 	SINGLETON TO SINGLETON
 	{
 		int i;
 		for(i=$1;i<=$3;i++)
-			rngset(&range, i);
+			cc_set(&cclass, i);
 	}
 End:
 	STDEND
@@ -50,7 +50,7 @@ End:
 		int i;
 		if(compliment)
 			for(i=0;i<32;i++)
-				range.member[i] = ~range.member[i];
+				cclass.member[i] = ~range.member[i];
 	}
 %%
 
@@ -63,14 +63,14 @@ int main(void)
 
 
 	do{
-		rnginit(&range);
+		cc_init(&cclass);
 		printf("Enter Character Class: ");
 		scanf(" %s", input);
 		substr = input;
 		yysetbuf(&substr);
-		rnginit(&range);
+		cc_init(&cclass);
 		yyparse();
-		rngprintbits(&range);
+		cc_printbits(&cclass);
 	}while(strcmp(input, "quit"));
 
 	return 0;
