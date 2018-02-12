@@ -134,7 +134,7 @@ int fsm(char** substr, int* STATE, int* SING)
 			++cur;
 		}while(isdigit(*cur));
 
-		tmp = (char*) malloc((len = BUF_line_len(&buffer) + 1));
+		tmp = (char*) malloc((len = BUF_len(&buffer) + 1));
 
 		for(i=0;i<len;++i)
 			tmp[i] = BUF_getc(&buffer);
@@ -170,7 +170,7 @@ int fsm(char** substr, int* STATE, int* SING)
 			++cur;
 		}while(isdigit(*cur));
 
-		tmp = (char*) malloc((len = BUF_line_len(&buffer) + 1));
+		tmp = (char*) malloc((len = BUF_len(&buffer) + 1));
 
 		for(i=0;i<len;++i)
 			tmp[i] = BUF_getc(&buffer);
