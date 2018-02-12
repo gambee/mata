@@ -9,9 +9,11 @@
  * in flex regex/start states, that it is unnecessarily difficult and
  * unintuitive to code/maintain this as a flex scanner.
  */
+#include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "cc_comp.tab.h"
-#include "buffer.h"
+#include "buffer.tab.h"
 
 enum state{INITIAL, INITIAL_B, CHARCLASS, INTEGER, CTLCHAR, INTCLASS, END};
 

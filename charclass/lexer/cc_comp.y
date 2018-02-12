@@ -50,7 +50,7 @@ End:
 		int i;
 		if(compliment)
 			for(i=0;i<32;i++)
-				cclass.member[i] = ~range.member[i];
+				cclass.member[i] = ~cclass.member[i];
 	}
 %%
 
