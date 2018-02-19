@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "cc_comp.tab.h"
+#include "cc_parse.tab.h"
 #include "buffer.tab.h"
 
 enum state{INITIAL, INITIAL_B, CHARCLASS, INTEGER, CTLCHAR, INTCLASS, END};
