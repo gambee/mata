@@ -178,4 +178,67 @@ int ast_df_print(struct ast* to_print)
 	return ret;
 }
 
+int check_node(struct ast_node* to_check)
+{
+	if(to_check == NULL)
+		return -1;
+	
+	switch(to_check->type) {
+		case DECL_OP:
+		case DEFLT_RNG:
+		case RANGE:
+			break;
+		case STATE:
+			if(to_check->symbol.state == NULL)
+				break;
+			if(to_check->symbol.state->entry == NULL)
+				break;
+			if(to_check->symbol.state->entry->symbol == NULL)
+				break;
+			if(!to_check->symbol.state->entry->declared)
+			{
+				printf("ERROR: State \'%s\' found on line %d"
+						" is undeclared.\n"
+						,to_check->symbol.state->entry->symbol
+						,to_check->symbol.state->line);
+				return 1;
+			}
+			else break;
+	}
+	return 0;
+}
+
+int depth_first_checkdecl(struct ast_node* root)
+{
+	int ret;
+	if(!root)
+		return 0;
+	ret = check_node(root);
+	ret += depth_first_checkdecl(root->left);
+	ret += depth_first_checkdecl(root->right);
+	return ret;
+}
+
+int ast_df_checkdecl(struct ast* to_print)
+{
+	int ret = 0;
+	struct root_node* cur;
+
+	if(!to_print)
+		return -1;
+	
+	cur = to_print->head;
+
+	while(cur)
+	{
+		ret += depth_first_checkdecl(cur->root);
+		cur = cur->next;
+	}
+
+	if(ret)
+		printf("ERROR: Found %d Undeclared States\n", ret);
+
+	return ret;
+}
+
 #endif

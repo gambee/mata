@@ -116,6 +116,24 @@ int tablist_printentry(struct tab_entry* entry)
 	else return 1;
 }
 
+/* Function: tablist_printundecl
+ * --------------------------
+ */
+ int tablist_printundecl(struct tab_entry* head)
+ {
+	 int i = 0;
+	 struct tab_entry* cur = head;
+	 while(cur)
+	 {
+		if(!cur->declared)
+		{
+			tablist_printentry(cur);
+			++i;
+		}
+		cur = cur->next;
+	 }
+	 return i;
+ }
 /* Function: tablist_printall
  * --------------------------
  */

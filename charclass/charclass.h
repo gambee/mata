@@ -25,7 +25,20 @@ int bufputch(struct BUF_buffer*, unsigned int);
 
 char* cc_expr(charclass*);
 int compexpr(charclass*, char*);
+void cc_codegen(charclass*, char*, FILE*);
 
+void cc_codegen(charclass* cclass, char* name, FILE* outfile)
+{
+	int i;
+	fprintf(outfile, "struct{char member[32];}%s={{\n", name);
+	for(i = 0; i < 31; ++i)
+	{
+		if(i == 8 || i == 16 || i == 24)
+			putc('\n', outfile);
+		fprintf(outfile, " 0x%02x,", (unsigned char) cclass->member[i]);
+	}
+	fprintf(outfile, " 0x%02x}};\n\n", (unsigned char) cclass->member[i]);
+}
 
 int compexpr(charclass* cclass, char* expr)
 {

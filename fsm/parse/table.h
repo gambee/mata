@@ -94,12 +94,31 @@ int tab_init(struct sym_tab* to_init)
 #		define TABLE_DEBUG_LIBS
 #	endif
 
+/* Function: tab_printundecl
+ * -----------------------
+ */
+int tab_printundecl(struct sym_tab* table)
+{
+	int i, count;
+	printf("Undeclared Identifiers:\n");
+	for(i = 0, count = 0; i < SYM_TAB_SIZE; i++)
+	{
+		if(table->entries[i])
+		{
+			printf("table->entries[%d]\n=================\n",i);
+			count += tablist_printundecl(table->entries[i]);
+		}
+	}
+	return count;
+}
+
 /* Function: tab_printall
  * -----------------------
  */
 int tab_printall(struct sym_tab* table)
 {
 	int i;
+	printf("Symbol Table Identifiers:\n");
 	for(i = 0; i < SYM_TAB_SIZE; i++)
 	{
 		if(table->entries[i])

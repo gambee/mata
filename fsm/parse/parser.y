@@ -100,11 +100,14 @@ int main(int argc, char** argv)
 	tab_init(&table);
 	ast_init(&syntax_tree);
 	line_no = 1;
-	printf("yyparse(): %d\n", yyparse());
-	printf("\n\nSymbol Table Contents:\n\n");
-	tab_printall(&table);
-	printf("Depth First Traversal of AST:\n\n");
-	ast_df_print(&syntax_tree);
+	//printf("yyparse(): %d\n", yyparse());
+	yyparse();
+	if(!ast_df_checkdecl(&syntax_tree))
+	{
+		printf("Depth First Traversal of AST:\n\n");
+		ast_df_print(&syntax_tree);
+		putc('\n', stdout);
+	}
 	return 0;
 }
 

@@ -1,4 +1,4 @@
-parser: lex.yy.c table.h parser.tab.c
+parser: lex.yy.c table.h parser.tab.c ast.h
 	gcc lex.yy.c parser.tab.c -lfl -o parser
 lex.yy.c: lexer.l parser.tab.h
 	flex lexer.l
