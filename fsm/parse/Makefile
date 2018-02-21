@@ -6,3 +6,6 @@ parser.tab.h: parser.tab.c
 parser.tab.c: parser.y
 	bison -d parser.y
 
+dot: ast.dot
+	dot -Tsvg ast.dot > ast.svg
+

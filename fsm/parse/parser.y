@@ -97,6 +97,7 @@ struct State* mk_State(char* state, int line)
 	
 int main(int argc, char** argv)
 {
+	FILE* file = NULL;
 	tab_init(&table);
 	ast_init(&syntax_tree);
 	line_no = 1;
@@ -107,6 +108,8 @@ int main(int argc, char** argv)
 		printf("Depth First Traversal of AST:\n\n");
 		ast_df_print(&syntax_tree);
 		putc('\n', stdout);
+		if(file = fopen("ast.dot", "w"))
+			print_as_dot(&syntax_tree, file);
 	}
 	return 0;
 }

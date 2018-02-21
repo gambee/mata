@@ -12,6 +12,10 @@
 #include "matatypes.h"
 #include "table.h"
 
+int dot_node_index;
+
+static char DECL_OP_TEXT [] = ":";
+static char DEFLT_RNG_TEXT [] = "~";
 
 struct ast_node
 {
@@ -34,6 +38,66 @@ struct ast
 {
 	struct root_node* head;
 };
+
+char* get_token_text(struct ast_node* node)
+{
+	if(node)
+	{
+		switch(node->type){
+			case STATE: return node->symbol.state->entry->symbol;
+			case RANGE: return node->symbol.range->range;
+			case DEFLT_RNG: return DEFLT_RNG_TEXT;
+			case DECL_OP: return DECL_OP_TEXT;
+		}
+	}
+	return NULL;
+}
+
+int rec_print_as_dot(struct ast_node* root, FILE* outfile)
+{
+	int cur_dot_index = dot_node_index++;
+	int count;
+	char* token = NULL;
+
+	if(root)
+	{
+		fprintf(outfile, "%d[label=\"%s\"];\n"
+			,cur_dot_index
+			,((token = get_token_text(root)) == NULL) ? "(null)" : token );
+		if(root->left)
+		{
+			fprintf(outfile, "%d->%d\n"
+				,cur_dot_index, dot_node_index);
+			count = rec_print_as_dot(root->left, outfile);
+		}
+		if(root->right)
+		{
+			fprintf(outfile, "%d->%d\n"
+				,cur_dot_index, dot_node_index);
+			count += rec_print_as_dot(root->right, outfile);
+		}
+		return count;
+	}
+	else return 0;
+}
+
+int print_as_dot(struct ast* to_print, FILE* outfile)
+{
+	struct root_node *cur = to_print->head;
+	int ret = 0, sub_root_index;
+
+	dot_node_index = 1;
+	fprintf(outfile, "digraph AST {\n0[label=FSM];\n");
+	while(cur)
+	{
+		sub_root_index = dot_node_index;
+		ret += rec_print_as_dot(cur->root, outfile);
+		fprintf(outfile, "0->%d\n", sub_root_index);
+		cur = cur->next;
+	}
+	fprintf(outfile, "}");
+	return ret;
+}
 
 void ast_init(struct ast* to_init)
 {
