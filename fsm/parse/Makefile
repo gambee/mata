@@ -5,7 +5,9 @@ lex.yy.c: lexer.l parser.tab.h
 parser.tab.h: parser.tab.c
 parser.tab.c: parser.y
 	bison -d parser.y
-
+cc_parse.h: cc_parse.tab.h
+cc_parse.tab.h: cc_parse.y
+	bison cc_parse.y
 dot: ast.dot
 	dot -Tsvg ast.dot > ast.svg
 
