@@ -14,7 +14,7 @@
 #include "parser.tab.h"
 
 
-extern struct Range* mk_Range(char* range, int line);
+extern struct CClass* mk_CClass(char* cclass, int line);
 extern struct State* mk_State(char* state, int line);
 extern int line_no;
 extern struct sym_tab table;
@@ -53,8 +53,8 @@ extern struct sym_tab table;
 						yylval.state = mk_State(yytext, line_no);
 						return STATE;}
 
-"[".*[^\\]"]"			{//printf("Found Range:\t%s\n", yytext);
-						yylval.range = mk_Range(yytext, line_no);
-						return RANGE;}
+"[".*[^\\]"]"			{//printf("Found CClass:\t%s\n", yytext);
+						yylval.cclass = mk_CClass(yytext, line_no);
+						return CCLASS;}
 
 %%

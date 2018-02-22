@@ -7,8 +7,8 @@
 #ifndef MATATYPES_H
 #	define MATATYPES_H
 
-struct Range{
-	char* range;
+struct CClass{
+	char* cclass;
 	int line;
 };
 

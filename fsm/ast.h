@@ -24,7 +24,7 @@ struct ast_node
 	int type;
 	union{
 		struct State* state;
-		struct Range* range;
+		struct CClass* cclass;
 	}symbol;
 };
 
@@ -45,7 +45,7 @@ char* get_token_text(struct ast_node* node)
 	{
 		switch(node->type){
 			case STATE: return node->symbol.state->entry->symbol;
-			case RANGE: return node->symbol.range->range;
+			case CCLASS: return node->symbol.cclass->cclass;
 			case DEFLT_RNG: return DEFLT_RNG_TEXT;
 			case DECL_OP: return DECL_OP_TEXT;
 		}
@@ -140,7 +140,7 @@ struct ast_node* mk_node(	struct ast_node* left,
 			if(symbol)
 				return NULL; //error, passed non null pointer 
 			break;
-		case RANGE:
+		case CCLASS:
 			if(!symbol)
 				return NULL; //error, passed null pointer 
 			break;
@@ -167,8 +167,8 @@ struct ast_node* mk_node(	struct ast_node* left,
 		case DEFLT_RNG:
 			tmp->symbol.state = NULL;
 			break;
-		case RANGE:
-			tmp->symbol.range = (struct Range*) symbol;
+		case CCLASS:
+			tmp->symbol.cclass = (struct CClass*) symbol;
 			break;
 		case STATE:
 			tmp->symbol.state = (struct State*) symbol;
@@ -190,12 +190,12 @@ int print_node(struct ast_node* to_print)
 		case DEFLT_RNG:
 			printf("~");
 			break;
-		case RANGE:
-			if(to_print->symbol.range == NULL)
+		case CCLASS:
+			if(to_print->symbol.cclass == NULL)
 				return -2;
-			if(to_print->symbol.range->range == NULL)
+			if(to_print->symbol.cclass->cclass == NULL)
 				return -3;
-			printf(to_print->symbol.range->range);
+			printf(to_print->symbol.cclass->cclass);
 			break;
 		case STATE:
 			if(to_print->symbol.state == NULL)
@@ -250,7 +250,7 @@ int check_node(struct ast_node* to_check)
 	switch(to_check->type) {
 		case DECL_OP:
 		case DEFLT_RNG:
-		case RANGE:
+		case CCLASS:
 			break;
 		case STATE:
 			if(to_check->symbol.state == NULL)

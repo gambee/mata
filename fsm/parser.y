@@ -23,13 +23,13 @@ void yyerror(char* input){printf("%s\n",input); }
 %}
 
 %union{
-	struct Range* range;
+	struct CClass* cclass;
 	struct State* state;
 	struct ast_node* astnode;
 	struct root_node* rootnode;
 }
 
-%token <range> RANGE
+%token <cclass> CCLASS
 %token <state> STATE
 %token <astnode> DEFLT_RNG
 %token DECL_OP
@@ -53,8 +53,8 @@ Maps:
 						$$->right = $2; }
 	| Deflt_Map			{ $$ = $1; }
 Map:
-	RANGE STATE			{$$ = mk_node(mk_node(NULL, NULL, STATE, $2),
-								NULL, RANGE, $1);
+	CCLASS STATE			{$$ = mk_node(mk_node(NULL, NULL, STATE, $2),
+								NULL, CCLASS, $1);
 						}
 Deflt_Map:
 	DEFLT_RNG STATE		{$$ = mk_node(mk_node(NULL, NULL, STATE, $2),
@@ -63,20 +63,20 @@ Deflt_Map:
 
 %%
 
-struct Range* mk_Range(char* range, int line)
+struct CClass* mk_CClass(char* cclass, int line)
 {
-	struct Range* tmp = (struct Range*) malloc(sizeof(struct Range));
-	if(range == NULL)
+	struct CClass* tmp = (struct CClass*) malloc(sizeof(struct CClass));
+	if(cclass == NULL)
 		return NULL; //passed unititialized string
 	if(tmp == NULL)
 		return NULL; //failed malloc!
-	tmp->range = (char*) malloc(strlen(range)+1);
-	if(tmp->range == NULL)
+	tmp->cclass = (char*) malloc(strlen(cclass)+1);
+	if(tmp->cclass == NULL)
 	{	//failed malloc!
 		free(tmp);
 		return NULL;
 	}
-	strcpy(tmp->range, range);
+	strcpy(tmp->cclass, cclass);
 	tmp->line = line;
 	return tmp;
 }
