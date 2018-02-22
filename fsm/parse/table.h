@@ -49,7 +49,13 @@ unsigned long tab_hash(char* symbol)
 	unsigned long val;
 	if(symbol)
 		for(cur = symbol, val = 0; *cur; ++cur)
-			val = val * POLN_X + (unsigned long) *(cur++);
+			val = val * POLN_X + *cur;
+			/*
+	printf("symbol: %s\t strlen: %d\thash: %d\n"
+			,symbol
+			,strlen(symbol)
+			,val % SYM_TAB_SIZE);
+	*/
 	return val % SYM_TAB_SIZE;
 }
 

@@ -22,6 +22,10 @@ extern struct sym_tab table;
 %}
 
 %%
+
+[ \t]					{ }//ignore white space
+[\n]					{++line_no;}//so that line_no works?
+
 "/*"					{ /*skip multiline c-style comments*/
 						int c;
 						while((c = input()) != 0)
@@ -52,8 +56,5 @@ extern struct sym_tab table;
 "[".*[^\\]"]"			{//printf("Found Range:\t%s\n", yytext);
 						yylval.range = mk_Range(yytext, line_no);
 						return RANGE;}
-
-[ \t]					{ }//ignore white space
-[\n]					{++line_no;}//so that line_no works?
 
 %%

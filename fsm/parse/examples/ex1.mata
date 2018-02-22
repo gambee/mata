@@ -18,7 +18,7 @@
  * final, fail, and error states?
  */
 
-q0:
+start:
  	[a]		q1
 	~		q2
 q1:

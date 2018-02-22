@@ -97,20 +97,28 @@ struct State* mk_State(char* state, int line)
 	
 int main(int argc, char** argv)
 {
+	char filename[100];
 	FILE* file = NULL;
+
 	tab_init(&table);
 	ast_init(&syntax_tree);
 	line_no = 1;
-	//printf("yyparse(): %d\n", yyparse());
+
 	yyparse();
 	if(!ast_df_checkdecl(&syntax_tree))
 	{
-		printf("Depth First Traversal of AST:\n\n");
-		ast_df_print(&syntax_tree);
-		putc('\n', stdout);
-		if(file = fopen("ast.dot", "w"))
-			print_as_dot(&syntax_tree, file);
+		if(argc == 2)
+		{
+			if(file = fopen(argv[1], "w"))
+				print_as_dot(&syntax_tree, file);
+		}
+		else
+		{
+			if(file = fopen("ast.dot", "w"))
+				print_as_dot(&syntax_tree, file);
+		}
 	}
+	
 	return 0;
 }
 

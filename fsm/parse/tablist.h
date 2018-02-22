@@ -47,7 +47,7 @@ struct tab_entry* tablist_lookup(struct tab_entry* head, char* symbol)
 		if(cur->symbol)
 		{
 			if(!strcmp(symbol, cur->symbol))
-				break;
+				return cur;
 		}
 		cur = cur->next;
 	}

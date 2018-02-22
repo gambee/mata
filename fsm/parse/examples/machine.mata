@@ -1,9 +1,3 @@
-/* machine.m
- *
- * Another example state machine source file.
- */
-
-
 start:
 	[a]	a
 	[b] b
