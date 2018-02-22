@@ -2,5 +2,6 @@ lex.yy.c
 parser
 parser.tab.c
 parser.tab.h
-testdb
-test
+cc_parse.tab.h
+cc_parse.h
+cc_test
