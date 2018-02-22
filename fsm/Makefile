@@ -11,5 +11,7 @@ cc_parse.tab.h: cc_parse.y
 	bison cc_parse.y
 dot: ast.dot
 	dot -Tsvg ast.dot > ast.svg
+cc_test: cc_test.c charclass.h cc_lex.c cc_parse.h cc_parse.tab.h
+	gcc cc_test.c cc_lex.c -o cc_test
 clean: lex.yy.c parser.tab.c parser.tab.h
 	rm lex.yy.c parser.tab.c parser.tab.h

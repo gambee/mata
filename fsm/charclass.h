@@ -13,12 +13,13 @@
 typedef struct {char member[32];} charclass;
 
 void cc_init(charclass*);
-int cc_bitcnt(charclass*);
-int cc_bit(charclass*, int);
 int cc_set(charclass*, int);
 int cc_unset(charclass*, int);
 int cc_flip(charclass*, int);
+int cc_copy(charclass*, charclass*);
 
+int cc_bitcnt(charclass*);
+int cc_bit(charclass*, int);
 int cc_str(char*,charclass*,int);
 void cc_printbits(charclass*);
 int bufputch(struct BUF_buffer*, unsigned int);
@@ -26,6 +27,15 @@ int bufputch(struct BUF_buffer*, unsigned int);
 char* cc_expr(charclass*);
 int compexpr(charclass*, char*);
 void cc_codegen(charclass*, char*, FILE*);
+
+int cc_copy(charclass* dest, charclass* src)
+{
+	int i;
+	if(dest && src)
+		for(i=0; i<32; ++i)
+			dest->member[i] = src->member[i];
+	else return -1;
+}
 
 void cc_codegen(charclass* cclass, char* name, FILE* outfile)
 {

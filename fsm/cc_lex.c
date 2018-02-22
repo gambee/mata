@@ -100,6 +100,7 @@ int fsm(char** substr, int* STATE, int* SING)
 
 	CtlChar:	switch(*cur)
 	{
+		case '^':
 		case '\\':
 		case '{':
 		case '-':

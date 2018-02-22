@@ -14,7 +14,7 @@
 extern void cc_setbuf(char**);
 extern int cc_lex(void);
 void cc_error(char* input){printf("%s\n", input);}
-charclass cclass;
+charclass cc_parse_cclass;
 int compliment;
 %}
 
@@ -39,14 +39,14 @@ Head:
 Tail:
 	Expression Tail | Expression End
 Expression:
-	SINGLETON {cc_set(&cclass, $1);}
+	SINGLETON {cc_set(&cc_parse_cclass, $1);}
 	| Range
 Range:
 	SINGLETON TO SINGLETON
 	{
 		int i;
 		for(i=$1;i<=$3;i++)
-			cc_set(&cclass, i);
+			cc_set(&cc_parse_cclass, i);
 	}
 End:
 	STDEND
@@ -54,7 +54,7 @@ End:
 		int i;
 		if(compliment)
 			for(i=0;i<32;i++)
-				cclass.member[i] = ~cclass.member[i];
+				cc_parse_cclass.member[i] = ~cc_parse_cclass.member[i];
 	}
 %%
 
