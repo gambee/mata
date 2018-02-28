@@ -9,8 +9,19 @@
 #ifndef TABLE_LIBS
 #	include <stdlib.h>
 #	include <string.h>
+#	include "buffer.tab.h"
 #	define TABLE_LIBS
 #endif
+
+/* Section: Global Variables 
+ * 	(Static - This compilation unit only)
+ * 	========================
+ */
+
+static struct BUF_buffer jump_switch
+						,state_enum
+						,state_text
+						,state_textfunc;
 
 /* Section: Structures
  * ===================
@@ -116,6 +127,45 @@ int tablist_printentry(struct tab_entry* entry)
 	else return 1;
 }
 
+/* Function: tablist_codegen
+ * --------------------------
+ */
+ int tablist_codegen(struct tab_entry* head)
+ {
+	 int i = 0;
+	 struct tab_entry* cur = head;
+	 while(cur)
+	 {
+			//add to state_text
+		BUF_puts(&state_text, "char STATE_TEXT_");
+		BUF_puts(&state_text, cur->symbol);
+		BUF_puts(&state_text, " [] = \"");
+		BUF_puts(&state_text, cur->symbol);
+		BUF_puts(&state_text, "\";\n");
+			//add to state_textfunc
+		BUF_puts(&state_textfunc, "\t\tcase STATE_NUMBER_");
+		BUF_puts(&state_textfunc, cur->symbol);
+		BUF_puts(&state_textfunc, ":\n\t\t\treturn STATE_TEXT_");
+		BUF_puts(&state_textfunc, cur->symbol);
+		BUF_puts(&state_textfunc, ";\n");
+			//add to jump_switch
+		BUF_puts(&jump_switch, "\t\tcase STATE_NUMBER_");
+		BUF_puts(&jump_switch, cur->symbol);
+		BUF_puts(&jump_switch, ":\n\t\t\tgoto STATE_LABEL_");
+		BUF_puts(&jump_switch, cur->symbol);
+		BUF_puts(&jump_switch, ";\n");
+			//add to enumeration
+		BUF_puts(&state_enum, "STATE_NUMBER_");
+		BUF_puts(&state_enum, cur->symbol);
+		BUF_puts(&state_enum, ", ");
+
+		++i;
+		cur = cur->next;
+	 }
+	 return i;
+ }
+ 
+
 /* Function: tablist_printundecl
  * --------------------------
  */
@@ -134,6 +184,7 @@ int tablist_printentry(struct tab_entry* entry)
 	 }
 	 return i;
  }
+ 
 /* Function: tablist_printall
  * --------------------------
  */

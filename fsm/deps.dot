@@ -1,0 +1,13 @@
+digraph dep_tree{
+	ast_h->{ parser_tab_h  matatypes_h  table_h };
+	cc_lex_c->{ cc_parse_tab_h  charclass_h };
+	cc_parse_y->{ charclass_tab_h };
+	charclass_h->{ buffer_h  cbits_h };
+	charclass_tab_h->{ buffer_tab_h };
+	lexer_l->{ parser_tab_h };
+	matatypes_h->{ charclass_tab_h };
+	parser_y->{ table_h  matatypes_h  ast_h  trans_list_h  cc_parse_tab_h };
+	table_h->{ tablist_h };
+	trans_list_h->{ charclass_tab_h };
+}
+	

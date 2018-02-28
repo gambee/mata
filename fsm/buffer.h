@@ -119,6 +119,7 @@ int BUF_line_len(struct BUF_buffer *buf)
 	}
 	return (cur->data[i] == '\n') ? count : -count;
 }
+
 /* ------------------------------------- * 
  * Function: BUF_len
  * ------------------------------------- */
@@ -182,6 +183,27 @@ int BUF_getc(struct BUF_buffer *buf)
 
 	return ret;
 }
+
+/* ------------------------------------- * 
+ * Function: BUF_gets
+ * ------------------------------------- */
+int BUF_gets(struct BUF_buffer *buf, char** dest)
+{
+	char* cur;
+
+	if(!buf || !dest)
+		return -1;
+
+	if(*dest == NULL) //Null case where gets() allocates the destination string
+		if(NULL == (*dest = (char*) malloc(BUF_len(buf)+1)))
+			return -2; //failed malloc
+
+	for(cur = *dest; *cur = BUF_getc(buf); ++cur);
+	*cur = 0;
+	
+	return 0;
+}
+
 
 /* -------------------------------------------------------------------------- *
  * Function: BUF_putc

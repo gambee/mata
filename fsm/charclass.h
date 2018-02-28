@@ -7,10 +7,13 @@
 #ifndef CHARCLASS_H
 #	define CHARCLASS_H
 #	include <string.h>
-#	include "buffer.h"
+#	include "buffer.tab.h"
 #	include "cbits.h"
 
+#ifndef CHARCLASS_STRUCT
+# 	define CHARCLASS_STRUCT
 typedef struct {char member[32];} charclass;
+#endif
 
 void cc_init(charclass*);
 int cc_set(charclass*, int);
@@ -40,7 +43,7 @@ int cc_copy(charclass* dest, charclass* src)
 void cc_codegen(charclass* cclass, char* name, FILE* outfile)
 {
 	int i;
-	fprintf(outfile, "struct{char member[32];}%s={{\n", name);
+	fprintf(outfile, "static struct{char member[32];}%s={{\n", name);
 	for(i = 0; i < 31; ++i)
 	{
 		if(i == 8 || i == 16 || i == 24)

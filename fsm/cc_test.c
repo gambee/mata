@@ -10,7 +10,7 @@ extern charclass cc_parse_cclass;
 int main(void)
 {
 	charclass cc;
-	char Exp [] = "[\\^]";
+	char Exp [] = "[\\^";
 	char output[101];
 	char* exp = Exp;
 

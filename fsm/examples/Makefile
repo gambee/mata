@@ -1,4 +1,8 @@
+%.out : %.h
+	cp $< FSM.h
+	gcc test.c -o $@
+	rm FSM.h
 %.svg : %.dot
 	dot -Tsvg $< > $@
-%.dot : %.mata
-	cat $< | ./parser $@ 
+%.dot %.h : %.mata
+	cat $< | ./parser $< 

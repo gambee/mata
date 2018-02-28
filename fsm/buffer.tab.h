@@ -13,6 +13,10 @@
  * Section: Defines 					 *
  * ===================================== */
 
+#ifndef BUFFER_H
+#	ifndef BUF_TAB_H
+#		define BUF_TAB_H
+
 #ifdef BUF_DEBUG
 #	ifndef BUF_SIZE
 #	define BUF_SIZE 8		//buffer node sizes for debugging
@@ -51,6 +55,10 @@ extern void BUF_init(struct BUF_buffer *to_init);
 extern int BUF_line_len(struct BUF_buffer *buf);
 extern int BUF_len(struct BUF_buffer *buf);
 extern int BUF_getc(struct BUF_buffer *buf);
+extern int BUF_gets(struct BUF_buffer *buf, char** dest);
 extern int BUF_putc(struct BUF_buffer *buf, char c);
 extern int BUF_puts(struct BUF_buffer *buf, char *str);
 extern int BUF_print_all(struct BUF_buffer *buf);
+
+#	endif
+#endif

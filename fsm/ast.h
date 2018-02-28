@@ -8,6 +8,8 @@
 #	define AST_H
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
+#include "trans_list.h"
 #include "parser.tab.h"
 #include "matatypes.h"
 #include "table.h"
@@ -38,6 +40,120 @@ struct ast
 {
 	struct root_node* head;
 };
+
+
+int ast_codegen(struct ast* tree, FILE* outfile)
+{
+	char name[200];
+	char dest[100];
+	char src[100];
+	struct root_node* state;
+	struct ast_node* cur;
+
+	if(!outfile || !tree)
+		return -1;
+	
+	state = tree->head;
+
+	while(state)
+	{
+		cur = state->root;
+		strcpy(src, cur->left->symbol.state->entry->symbol);
+
+		fprintf(outfile, "\tSTATE_LABEL_%s:\n", src);
+
+		cur = cur->right;
+
+		while(cur->right)
+		{
+			strcpy(dest, cur->left->symbol.state->entry->symbol);
+			strcpy(name, src);
+			strcat(name, "__TO__");
+			strcat(name, dest);
+
+			fprintf(outfile, "\t\tif(cc_bit((charclass*)&%s, input))\n"
+					"\t\t\treturn STATE_NUMBER_%s;\n"
+					,name
+					,dest);
+
+			cur = cur->right;
+		}
+
+		strcpy(dest, cur->left->symbol.state->entry->symbol);
+		fprintf(outfile, "\t\t//Default Case:\n"
+				"\t\t\treturn STATE_NUMBER_%s;\n"
+				,dest);
+		state = state->next;
+	}
+
+	return 0;
+
+	bad_tree:
+		printf("ERROR: ast_mk_tr_list: BAD TREE!!!!\n");
+		return -2;
+}
+
+
+int ast_mk_tr_list(struct tr_list* list, struct ast* tree)
+{
+	char name[200];
+	char src[100];
+	struct root_node* state;
+	struct ast_node* cur;
+
+	if(!list || !tree)
+		return -1;
+	
+	state = tree->head;
+
+	while(state)
+	{
+		cur = state->root;
+		if(cur->type == DECL_OP && cur->left)
+		{
+			if(cur->left->type == STATE)
+			{
+				strcpy(src, cur->left->symbol.state->entry->symbol);
+				cur = cur->right;
+				while(cur->right)
+				{
+					if(cur->left)
+					{
+						strcpy(name, src);
+						strcat(name, "__TO__");
+						strcat(name, cur->left->symbol.state->entry->symbol);
+						//printf("Making Edge: %s\n", name);
+						tr_add(list, name, &(cur->symbol.cclass->cc));
+					}
+					else
+					{
+						printf("No left leaf!!\n");
+						goto bad_tree;
+					}
+					cur = cur->right;
+				}
+			}
+			else
+			{
+				printf("Source is of non-State type\n");
+				goto bad_tree;
+			}
+		}
+		else
+		{
+			printf("Expected \':\' declaration operator!!\n");
+			goto bad_tree;
+		}
+
+		state = state->next;
+	}
+
+	return 0;
+
+	bad_tree:
+		printf("ERROR: ast_mk_tr_list: BAD TREE!!!!\n");
+		return -2;
+}
 
 char* get_token_text(struct ast_node* node)
 {

@@ -8,17 +8,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "charclass.h"
+#include "charclass.tab.h"
 #define PRINT(STR, ARG) printf("BISON: " #STR " %d\n", ARG )
 
+extern  int cc_lineno;
 extern void cc_setbuf(char**);
 extern int cc_lex(void);
-void cc_error(char* input){printf("%s\n", input);}
+void cc_error(char* input){printf("%s on line %d\n", input, cc_lineno);}
 charclass cc_parse_cclass;
 int compliment;
 %}
 
-%output "cc_parse.h"
+%output "cc_parse.c"
 %defines "cc_parse.tab.h"
 %define api.prefix {cc_}
 

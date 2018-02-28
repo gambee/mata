@@ -10,15 +10,26 @@
 #include <string.h>
 
 #define TABLE_DEBUG
-#include "table.h"
-#include "matatypes.h"
+//#include "table.h"
+//#include "matatypes.h"
+#include "buffer.h"
 #include "ast.h"
+#include "trans_list.h"
+#include "cc_parse.tab.h"
+#include "cc_lex.c"
+//#include "cc_parse.h"
 
 int line_no;
 struct sym_tab table;
 struct ast syntax_tree;
+struct tr_list transitions;
+extern charclass cc_parse_cclass;
 
-extern int yylex(void);
+
+int cc_parse(void);
+void cc_setbufline(char**, int);
+
+int yylex(void);
 void yyerror(char* input){printf("%s\n",input); }
 %}
 
@@ -78,6 +89,12 @@ struct CClass* mk_CClass(char* cclass, int line)
 	}
 	strcpy(tmp->cclass, cclass);
 	tmp->line = line;
+
+	cc_init(&cc_parse_cclass);
+	cc_setbufline(&cclass, line);
+	cc_parse();
+	cc_copy(&(tmp->cc), &cc_parse_cclass);
+	//tr_add(&transitions, "edge_name", &cc_parse_cclass);//to be modified
 	return tmp;
 }
 
@@ -94,12 +111,67 @@ struct State* mk_State(char* state, int line)
 	return tmp;
 
 }
+
+int codegen(FILE* outfile)
+{
+	char* tmp;
+	tr_codegen(&transitions, outfile);
+	tab_codegen_populate(&table, outfile);
+
+	//storing state_enum code in a string and printing to outfile
+	tmp = NULL;
+	BUF_gets(&state_enum, &tmp);
+	if(!tmp)
+		return -1; //didn't work!
+	fprintf(outfile, tmp);
+	free(tmp);
+	tmp = NULL;
+
+	//storing state_text code in a string and printing to outfile
+	tmp = NULL;
+	BUF_gets(&state_text, &tmp);
+	if(!tmp)
+		return -1; //didn't work!
+	fprintf(outfile, tmp);
+	free(tmp);
+	tmp = NULL;
+
+	//storing state_textfunc code in a string and printing to outfile
+	tmp = NULL;
+	BUF_gets(&state_textfunc, &tmp);
+	if(!tmp)
+		return -1; //didn't work!
+	fprintf(outfile, tmp);
+	free(tmp);
+	tmp = NULL;
+
+	//storing jump_switch code into a string, for later
+	tmp = NULL;
+	BUF_gets(&jump_switch, &tmp);
+	if(!tmp)
+		return -1; //didn't work!
+
+	fprintf(outfile, "int FSM(int STATE, char input)\n{\n");
+	fprintf(outfile, tmp);
+	free(tmp);
+	tmp = NULL;
+	ast_codegen(&syntax_tree, outfile);
+	fprintf(outfile, "}\n");
+
+	return 0;
+}
 	
 int main(int argc, char** argv)
 {
+	int i;
+	char* cur;
 	char filename[100];
-	FILE* file = NULL;
+	FILE *dotfile = NULL, *hfile = NULL;
 
+	if(argc == 2)
+		freopen(argv[1], "r", stdin);
+
+	tr_init(&transitions);
 	tab_init(&table);
 	ast_init(&syntax_tree);
 	line_no = 1;
@@ -107,15 +179,53 @@ int main(int argc, char** argv)
 	yyparse();
 	if(!ast_df_checkdecl(&syntax_tree))
 	{
+		if(ast_mk_tr_list(&transitions, &syntax_tree))
+			return -1;
+
 		if(argc == 2)
 		{
-			if(file = fopen(argv[1], "w"))
-				print_as_dot(&syntax_tree, file);
+			strcpy(filename, argv[1]);
+			for(cur=filename; *cur != '.' && *cur; cur++);
+			if(*cur)
+			{
+				if(strcmp(".mata", cur))
+				{
+					printf("ERROR, unknown file type extension \"%s\"\n"
+					,cur);
+					return -1;
+				} 
+				++cur;
+
+				*cur = 0;
+				strcat(filename, "dot");
+				dotfile = fopen(filename, "w");
+
+				*cur = 0;
+				strcat(filename, "h");
+				hfile = fopen(filename, "w");
+			}
+			else
+			{
+					printf("ERROR, unknown file type extension <blank>\n");
+					return -1;
+			}
 		}
 		else
 		{
-			if(file = fopen("ast.dot", "w"))
-				print_as_dot(&syntax_tree, file);
+			dotfile = fopen("out.dot", "w");
+			if(hfile = fopen("out.h", "w"));
+		}
+
+		if(dotfile)
+		{
+			print_as_dot(&syntax_tree, dotfile);
+			fclose(dotfile);
+		}
+
+		if(hfile)
+		{
+			codegen(hfile);
+			fclose(hfile);
 		}
 	}
 	

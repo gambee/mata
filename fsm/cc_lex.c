@@ -1,4 +1,4 @@
-/* lex.my.c
+/* cc_lex.c
  *
  * Max Gambee
  * Copyright 2018
@@ -13,20 +13,34 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "cc_parse.tab.h"
-#include "buffer.tab.h"
+//#include "buffer.tab.h"
+#include "charclass.h"
 
 enum state{INITIAL, INITIAL_B, CHARCLASS, INTEGER, CTLCHAR, INTCLASS, END};
 
 int fsm(char**, int*, int*);
 int cc_lex(void);
 
+int cc_lineno;
 int cc_state;
 char **cc_buf;
 
+void cc_setline(int line_no)
+{
+	cc_lineno = line_no;
+}
 void cc_setbuf(char**substr)
 {
 	cc_state = INITIAL;
 	cc_buf = substr;
+}
+
+void cc_setbufline(char** substr, int line_no)
+{
+//	cc_init(&cc_parse_cclass);
+	cc_state = INITIAL;
+	cc_buf = substr;
+	cc_lineno = line_no;
 }
 
 int cc_lex(void){ return fsm(cc_buf, &cc_state, &cc_lval.singleton); }
@@ -76,7 +90,8 @@ int fsm(char** substr, int* STATE, int* SING)
 
 	CharClass:	switch(*cur)
 	{
-		case 0:		printf("Error: Unterminated Character Class\n");
+		case 0:		printf("Error on line %d: Unterminated Character Class\n"
+								,cc_lineno);
 					goto End;
 		case '-':	*substr = cur + 1;
 					//printf("TO\n");
@@ -119,7 +134,10 @@ int fsm(char** substr, int* STATE, int* SING)
 					break;
 		case 's':	*SING = ' ';
 					break;
-		default:	printf("Unrecognized Control Sequence: \\%c\n", *cur);
+		default:	printf("ERROR on line %d: "
+							"Unrecognized Control Sequence: \\%c\n"
+							,cc_lineno
+							,*cur);
 					goto End;
 	}
 	*substr = cur + 1;
@@ -153,12 +171,12 @@ int fsm(char** substr, int* STATE, int* SING)
 		}
 		else
 		{
-			printf("Expeced \'>\' after Integer\n");
+			printf("Expeced \'>\' after Integer, on line %d...\n", cc_lineno);
 			goto End;
 		}
 	}
 	else{
-		printf("Expected Integer after \'<\'\n");
+		printf("Expected Integer after \'<\', on line %d...\n", cc_lineno);
 		goto End;
 	}
 
@@ -202,15 +220,17 @@ int fsm(char** substr, int* STATE, int* SING)
 						}
 						else 
 						{
-							printf("Expected another \'.\'\n");
+							printf("Expected another \'.\' on line %d...\n"
+										,cc_lineno);
 							goto End;
 						}
-			default:	printf("Expeced \'}\' after Integer\n");
+			default:	printf("Expeced \'}\' after Integer, on line %d...\n"
+										,cc_lineno);
 						goto End;
 		}
 	}
 	else{
-		printf("Expected Integer after \'<\'\n");
+		printf("Expected Integer after \'<\', on line %d...\n", cc_lineno);
 		goto End;
 	}
 

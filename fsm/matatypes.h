@@ -7,8 +7,12 @@
 #ifndef MATATYPES_H
 #	define MATATYPES_H
 
+#include "charclass.tab.h"
+
+
 struct CClass{
 	char* cclass;
+	charclass cc;
 	int line;
 };
 

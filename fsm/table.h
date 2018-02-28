@@ -9,6 +9,7 @@
 #ifndef TABLE_LIBS
 #	include <stdlib.h> //needed for memory mngmt
 #	include <string.h> //needed for memset
+#	include "buffer.tab.h"
 #	define TABLE_LIBS
 #endif
 
@@ -99,6 +100,46 @@ int tab_init(struct sym_tab* to_init)
 #		include <stdio.h>
 #		define TABLE_DEBUG_LIBS
 #	endif
+
+
+/* Function: tab_codegen_populate
+ * -----------------------
+ */
+int tab_codegen_populate(struct sym_tab* table, FILE* outfile)
+{
+	if(!table || !outfile)
+		return -1;
+
+	int i, count;
+
+	BUF_init(&state_text);
+
+	BUF_init(&state_textfunc);
+	BUF_puts(&state_textfunc, "char* STATE_text(int STATE)\n{\n"
+						"\tswitch(STATE)\n\t{\n");
+
+	BUF_init(&jump_switch);
+	BUF_puts(&jump_switch, "\tswitch(STATE){\n");
+
+	BUF_init(&state_enum);
+	BUF_puts(&state_enum, "enum{");
+
+	
+	for(i = 0, count = 0; i < SYM_TAB_SIZE; i++)
+	{
+		if(table->entries[i])
+			count += tablist_codegen(table->entries[i]);
+	}
+
+	BUF_puts(&state_text, "char STATE_TEXT_UNKNOWN [] = "
+					"\"UKNOWN\";\n\n");
+	BUF_puts(&state_textfunc, "\t\tdefault:\n\t\t\treturn STATE_TEXT_UNKNOWN;"
+			"\n\t}\n}\n\n");
+	BUF_puts(&jump_switch, "\t\tdefault: return -1; //bad state\n\t}\n\n");
+	BUF_puts(&state_enum, "UNKNOWN_STATE=-1};\n\n");
+
+	return count;
+}
 
 /* Function: tab_printundecl
  * -----------------------
