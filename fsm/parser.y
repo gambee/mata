@@ -38,13 +38,16 @@ void yyerror(char* input){printf("%s\n",input); }
 	struct State* state;
 	struct ast_node* astnode;
 	struct root_node* rootnode;
+	int op;
 }
 
 %token <cclass> CCLASS
 %token <state> STATE
 %token <astnode> DEFLT_RNG
-%token DECL_OP
+%token <op> NORMAL_DECL_OP INITIAL_DECL_OP FINAL_DECL_OP INIFIN_DECL_OP
+
 %type <astnode> Map Maps Declaration Deflt_Map 
+%type <op> Declare_Operator
 
 %%
 
@@ -54,9 +57,9 @@ Declarations:
 	Declaration Declarations {ast_add(&syntax_tree, $1);}
 	| Declaration		{ast_add(&syntax_tree, $1);}
 Declaration:
-	STATE DECL_OP Maps 	{
+	STATE Declare_Operator Maps 	{
 						$$ = mk_node(mk_node(NULL, NULL, STATE, $1),
-								$3, DECL_OP, NULL);
+								$3, $2, NULL);
 						tab_add(&table, $1->entry->symbol, STATE, 1);
 						}
 Maps:
@@ -71,6 +74,11 @@ Deflt_Map:
 	DEFLT_RNG STATE		{$$ = mk_node(mk_node(NULL, NULL, STATE, $2),
 								NULL, DEFLT_RNG, NULL);
 						}
+Declare_Operator:
+	NORMAL_DECL_OP {$$ = NORMAL_DECL_OP;}
+	| INITIAL_DECL_OP {$$ = INITIAL_DECL_OP;}
+	| INIFIN_DECL_OP {$$ = INIFIN_DECL_OP;}
+	| FINAL_DECL_OP {$$ = FINAL_DECL_OP;}
 
 %%
 
@@ -127,6 +135,9 @@ int codegen(FILE* outfile)
 	free(tmp);
 	tmp = NULL;
 
+	//print the initial state info to outfile
+	ast_codegen_statetypes(&syntax_tree, outfile);
+
 	//storing state_text code in a string and printing to outfile
 	tmp = NULL;
 	BUF_gets(&state_text, &tmp);
@@ -155,8 +166,10 @@ int codegen(FILE* outfile)
 	fprintf(outfile, tmp);
 	free(tmp);
 	tmp = NULL;
-	ast_codegen(&syntax_tree, outfile);
-	fprintf(outfile, "}\n");
+	ast_codegen_transfunc(&syntax_tree, outfile);
+	fprintf(outfile, "}\n\n");
+
+	ast_codegen_finitecontrol(outfile);
 
 	return 0;
 }

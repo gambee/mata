@@ -3,6 +3,9 @@ parser: lex.yy.c table.h parser.tab.c ast.h cc_parse.h cc_lex.c
 	cp parser examples/parser
 lex.yy.c: lexer.l parser.tab.h
 	flex lexer.l
+vim: vim/ftdetect/mata.vim vim/syntax/mata.vim
+	cp vim/ftdetect/mata.vim ~/.vim/ftdetect/mata.vim
+	cp vim/syntax/mata.vim ~/.vim/syntax/mata.vim
 parser.tab.h: parser.tab.c
 parser.tab.c: parser.y
 	bison -d parser.y

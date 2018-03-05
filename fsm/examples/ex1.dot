@@ -1,0 +1,55 @@
+digraph AST {
+	0[label=FSM];
+
+	1[label="<:>"];
+
+	1->2;
+	2[label="start"];
+
+	1->3;
+	3[label="[^a]"];
+
+	3->4;
+	4[label="next"];
+
+	3->5;
+	5[label="~"];
+
+	5->6;
+	6[label="fail"];
+
+	0->1;
+
+	7[label=":"];
+
+	7->8;
+	8[label="next"];
+
+	7->9;
+	9[label="[{23,3}]"];
+
+	9->10;
+	10[label="next"];
+
+	9->11;
+	11[label="~"];
+
+	11->12;
+	12[label="fail"];
+
+	0->7;
+
+	13[label=":"];
+
+	13->14;
+	14[label="fail"];
+
+	13->15;
+	15[label="~"];
+
+	15->16;
+	16[label="fail"];
+
+	0->13;
+
+}

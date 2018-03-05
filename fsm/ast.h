@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "buffer.tab.h"
 #include "trans_list.h"
 #include "parser.tab.h"
 #include "matatypes.h"
@@ -16,7 +17,10 @@
 
 int dot_node_index;
 
-static char DECL_OP_TEXT [] = ":";
+static char INIFIN_DECL_OP_TEXT [] = "<:>";
+static char INITIAL_DECL_OP_TEXT [] = ":>";
+static char FINAL_DECL_OP_TEXT [] = "<:";
+static char NORMAL_DECL_OP_TEXT [] = ":";
 static char DEFLT_RNG_TEXT [] = "~";
 
 struct ast_node
@@ -41,8 +45,81 @@ struct ast
 	struct root_node* head;
 };
 
+int ast_codegen_finitecontrol(FILE* outfile)
+{
+	if(!outfile)
+		return -1;
 
-int ast_codegen(struct ast* tree, FILE* outfile)
+	//add finite control routine:
+	fprintf(outfile,
+		"int FSM_finite_control(char* input)\n"
+		"{\n"
+		"\tchar *cur;\n"
+		"\tint state;\n"
+		"\tif(!input)\n\t\treturn -1;\n\n"
+		"\tfor(cur=input, STATE_init(state);*cur;++cur)\n\t{\n"
+		"\t\tstate = FSM(state,*cur);\n"
+		"\t}\n"
+		"\treturn STATE_isfinal(state);\n}\n\n");
+	return 0;
+}
+
+int ast_codegen_statetypes(struct ast* tree, FILE* outfile)
+{
+	struct root_node* cur;
+	int init_states;
+
+	if(!tree || !outfile)
+		return -1;
+	
+	//add isfinal func via final states
+	fprintf(outfile,
+		"int STATE_isfinal(int STATE)\n{\n"
+		"\tswitch(STATE){\n");
+	for(cur = tree->head; cur; cur = cur->next)
+	{
+		if(cur->root->type == INIFIN_DECL_OP ||
+			cur->root->type == FINAL_DECL_OP)
+		{
+			fprintf(outfile
+				,"\t\tcase STATE_NUMBER_");
+			fprintf(outfile
+				,cur->root->left->symbol.state->entry->symbol);
+			fprintf(outfile, ":\n");
+		}
+	}
+	fprintf(outfile,
+		"\t\t\treturn 0;\n"
+		"\t\tdefault:\n\t\t\treturn STATE;\n\t}\n}\n\n");
+
+	//add initial state 
+	for(cur = tree->head, init_states = 0; cur; cur = cur->next)
+	{
+		if(cur->root->type == INIFIN_DECL_OP ||
+			cur->root->type == INITIAL_DECL_OP)
+		{
+			if(init_states == 0)
+			{
+				fprintf(outfile
+					,"const int INITIAL_FSM_STATE = STATE_NUMBER_");
+				fprintf(outfile
+					,cur->root->left->symbol.state->entry->symbol);
+				fprintf(outfile, ";\n\n");
+			}
+			++init_states;
+		}
+	}
+	if(init_states == 0)
+	{
+		fprintf(outfile, "static const int INITIAL_FSM_STATE = 0;\n\n");
+		++init_states;
+	}
+
+	//add state init macro
+	fprintf(outfile, "#define STATE_init(X)\t(X=INITIAL_FSM_STATE)\n\n");
+}
+
+int ast_codegen_transfunc(struct ast* tree, FILE* outfile)
 {
 	char name[200];
 	char dest[100];
@@ -80,7 +157,7 @@ int ast_codegen(struct ast* tree, FILE* outfile)
 		}
 
 		strcpy(dest, cur->left->symbol.state->entry->symbol);
-		fprintf(outfile, "\t\t//Default Case:\n"
+		fprintf(outfile, "\t\t//Default Transition:\n"
 				"\t\t\treturn STATE_NUMBER_%s;\n"
 				,dest);
 		state = state->next;
@@ -109,7 +186,10 @@ int ast_mk_tr_list(struct tr_list* list, struct ast* tree)
 	while(state)
 	{
 		cur = state->root;
-		if(cur->type == DECL_OP && cur->left)
+		if((cur->type == NORMAL_DECL_OP || 
+			cur->type == INIFIN_DECL_OP ||
+			cur->type == INITIAL_DECL_OP ||
+			cur->type == FINAL_DECL_OP) && cur->left)
 		{
 			if(cur->left->type == STATE)
 			{
@@ -163,7 +243,10 @@ char* get_token_text(struct ast_node* node)
 			case STATE: return node->symbol.state->entry->symbol;
 			case CCLASS: return node->symbol.cclass->cclass;
 			case DEFLT_RNG: return DEFLT_RNG_TEXT;
-			case DECL_OP: return DECL_OP_TEXT;
+			case NORMAL_DECL_OP: return NORMAL_DECL_OP_TEXT;
+			case INITIAL_DECL_OP: return INITIAL_DECL_OP_TEXT;
+			case INIFIN_DECL_OP: return INIFIN_DECL_OP_TEXT;
+			case FINAL_DECL_OP: return FINAL_DECL_OP_TEXT;
 		}
 	}
 	return NULL;
@@ -177,18 +260,18 @@ int rec_print_as_dot(struct ast_node* root, FILE* outfile)
 
 	if(root)
 	{
-		fprintf(outfile, "%d[label=\"%s\"];\n"
+		fprintf(outfile, "\t%d[label=\"%s\"];\n\n"
 			,cur_dot_index
 			,((token = get_token_text(root)) == NULL) ? "(null)" : token );
 		if(root->left)
 		{
-			fprintf(outfile, "%d->%d\n"
+			fprintf(outfile, "\t%d->%d;\n"
 				,cur_dot_index, dot_node_index);
 			count = rec_print_as_dot(root->left, outfile);
 		}
 		if(root->right)
 		{
-			fprintf(outfile, "%d->%d\n"
+			fprintf(outfile, "\t%d->%d;\n"
 				,cur_dot_index, dot_node_index);
 			count += rec_print_as_dot(root->right, outfile);
 		}
@@ -203,12 +286,60 @@ int print_as_dot(struct ast* to_print, FILE* outfile)
 	int ret = 0, sub_root_index;
 
 	dot_node_index = 1;
-	fprintf(outfile, "digraph AST {\n0[label=FSM];\n");
+	fprintf(outfile, "digraph AST {\n\t0[label=FSM];\n\n");
 	while(cur)
 	{
 		sub_root_index = dot_node_index;
 		ret += rec_print_as_dot(cur->root, outfile);
-		fprintf(outfile, "0->%d\n", sub_root_index);
+		fprintf(outfile, "\t0->%d;\n\n", sub_root_index);
+		cur = cur->next;
+	}
+	fprintf(outfile, "}");
+	return ret;
+}
+
+int rec_print_FSM_as_dot(struct ast_node* root, char* parent, FILE* outfile)
+{
+	int count = 0;
+	char* token = NULL;
+
+	if(root)
+	{
+
+	}
+	else return 0;
+}
+
+int print_FSM_as_dot(struct ast* to_print, FILE* outfile)
+{
+	int ret = 0;
+	struct root_node *cur = to_print->head;
+
+	fprintf(outfile, "digraph AST {\n\trankdir=LR;\n\n");
+
+	//print states, with circle or double circle
+	while(cur)
+	{
+		if(cur->root->type == INIFIN_DECL_OP ||
+			cur->root->type == FINAL_DECL_OP)
+		{
+			fprintf(outfile, "\t%s[shape=doublecircle];\n"
+				,cur->root->left->symbol.state->entry->symbol);
+		}
+		else
+		{
+			fprintf(outfile, "\t%s[shape=circle];\n"
+				,cur->root->left->symbol.state->entry->symbol);
+		}
+		cur = cur->next;
+	}
+
+	cur = to_print->head;
+	while(cur)
+	{
+		ret += rec_print_FSM_as_dot(cur->root->right
+				,cur->root->left->symbol.state->entry->symbol
+				,outfile);
 		cur = cur->next;
 	}
 	fprintf(outfile, "}");
@@ -248,7 +379,10 @@ struct ast_node* mk_node(	struct ast_node* left,
 	struct ast_node* tmp;
 
 	switch(type){
-		case DECL_OP:
+		case INIFIN_DECL_OP:
+		case INITIAL_DECL_OP:
+		case FINAL_DECL_OP:
+		case NORMAL_DECL_OP:
 			if(symbol)
 				return NULL; //error, passed non null pointer 
 			break;
@@ -277,7 +411,7 @@ struct ast_node* mk_node(	struct ast_node* left,
 	tmp->type = type;
 
 	switch(type){
-		case DECL_OP:
+		case NORMAL_DECL_OP:
 			tmp->symbol.state = NULL;
 			break;
 		case DEFLT_RNG:
@@ -300,7 +434,7 @@ int print_node(struct ast_node* to_print)
 		return -1;
 	
 	switch(to_print->type) {
-		case DECL_OP:
+		case NORMAL_DECL_OP:
 			printf(":");
 			break;
 		case DEFLT_RNG:
@@ -364,7 +498,7 @@ int check_node(struct ast_node* to_check)
 		return -1;
 	
 	switch(to_check->type) {
-		case DECL_OP:
+		case NORMAL_DECL_OP:
 		case DEFLT_RNG:
 		case CCLASS:
 			break;

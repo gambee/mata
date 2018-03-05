@@ -6,7 +6,9 @@
  * note: this version is case sensitive, and only matches all lower
  */
 
-start: //this is the general start case, can match any of the words from here
+
+
+start<:> //this is the general start case, can match any of the words from here
 	[f]			foo_1
 	[b]			bar_bash_1
 	[\s\t\n]	start //ignore whitespace
@@ -14,12 +16,12 @@ start: //this is the general start case, can match any of the words from here
 
 /* match the word foo! */
 foo_1:
-	[o]			foo_2 //matches the first o in foo ... i.e. fOo
+	[o-a]		foo_2 //matches the first o in foo ... i.e. fOo
 	~			fail
 foo_2:
 	[o]			foo_3 //matchs ths last o .. foO
 	~			fail
-foo_3:
+foo_3<:
 	[\s\t\n]	start //makes sure to not match compound words i.e. foobar
 	~			fail
 
@@ -38,7 +40,7 @@ bar_bash_2:
 	~			fail
 
 /* bar ... ensure word is delimited by whitewpace */
-bar:
+bar<:
 	[\s\t\n]	start
 	~			fail
 
@@ -46,7 +48,7 @@ bar:
 bash_1:
 	[h]			bash_2 //yay!!! found a bash, ensure delimited
 	~			fail
-bash_2:
+bash_2<:
 	[\s\t\n]	start
 	~			fail
 

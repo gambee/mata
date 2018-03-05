@@ -23,9 +23,6 @@ extern struct sym_tab table;
 
 %%
 
-[ \t]					{ }//ignore white space
-[\n]					{++line_no;}//so that line_no works?
-
 "/*"					{ /*skip multiline c-style comments*/
 						int c;
 						while((c = input()) != 0)
@@ -45,7 +42,10 @@ extern struct sym_tab table;
 						++line_no;
 						}
 
-":"					{return DECL_OP;}
+"<:>"				{return INIFIN_DECL_OP;}
+":>"				{return INITIAL_DECL_OP;}
+"<:"				{return FINAL_DECL_OP;}
+":"					{return NORMAL_DECL_OP;}
 "~"					{return DEFLT_RNG;}
 
 
@@ -53,8 +53,12 @@ extern struct sym_tab table;
 						yylval.state = mk_State(yytext, line_no);
 						return STATE;}
 
-"[".*[^\\]"]"			{//printf("Found CClass:\t%s\n", yytext);
+"["(\\]|[^]])*[^]\\]*"]"			{//printf("Found CClass:\t%s\n", yytext);
 						yylval.cclass = mk_CClass(yytext, line_no);
 						return CCLASS;}
+
+[ \t\r]					{ }//ignore white space
+[\n]					{++line_no;}//so that line_no works?
+
 
 %%
